@@ -14,7 +14,7 @@
     "event_ts_ms": {
       "type": "integer",
       "minimum": 0,
-      "description": "Event wall-clock timestamp in milliseconds since boot."
+      "description": "Event timestamp in milliseconds since boot (monotonic uptime clock from millis())."
     },
     "snapshot_id": {
       "type": "string",
@@ -87,7 +87,7 @@
         "ts_ms": {
           "type": "integer",
           "minimum": 0,
-          "description": "Detection timestamp in milliseconds since boot."
+          "description": "Detection timestamp in milliseconds since boot (monotonic uptime clock from millis())."
         }
       }
     },

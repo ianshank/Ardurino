@@ -1,6 +1,6 @@
 {
   "schema": "detection.v1",
-  "event_ts_ms": 1736544000000,
+  "event_ts_ms": 123456,
   "snapshot_id": "snap-0001",
   "meta": {
     "device_id": "wspot-dev-0001",
@@ -15,7 +15,7 @@
       "label": "deer",
       "score": 87,
       "bbox": { "x": 120, "y": 80, "w": 200, "h": 240 },
-      "ts_ms": 1736544000000
+      "ts_ms": 123450
     }
   ]
 }
