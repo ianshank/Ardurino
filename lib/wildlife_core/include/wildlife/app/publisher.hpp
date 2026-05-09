@@ -27,27 +27,22 @@ enum class PublishOutcome : uint8_t {
 };
 
 class Publisher {
-public:
+  public:
     // device_id is mandatory — it segments MQTT topics as
     //   <base_topic>/<device_id>/event  and  <base_topic>/<device_id>/snapshot
     // An empty device_id is logged as a warning but not fatal.
-    Publisher(EventDebouncer  debouncer,
-              EventSerializer serializer,
-              std::string      device_id,
-              const RuntimeConfig::Mqtt& mqtt_cfg,
-              ITransport&    transport,
-              ILogger*       log = nullptr) noexcept;
+    Publisher(EventDebouncer debouncer, EventSerializer serializer, std::string device_id,
+              const RuntimeConfig::Mqtt& mqtt_cfg, ITransport& transport,
+              ILogger* log = nullptr) noexcept;
 
     // Publish a detection event, optionally attaching a JPEG snapshot.
     // snapshot must be non-null if a jpeg is available; pass {} to skip.
-    PublishOutcome publish(const DetectionEvent&           event,
-                           const std::string&              label_resolver_call_result,
-                           std::optional<JpegBuffer>       snapshot) noexcept;
+    PublishOutcome publish(const DetectionEvent& event, const std::string& resolved_label,
+                           std::optional<JpegBuffer> snapshot) noexcept;
 
     // Overload with a label resolver callable (int32_t → std::string).
-    template<typename LabelFn>
-    PublishOutcome publish_with_labels(const DetectionEvent&     event,
-                                       LabelFn&&                 resolver,
+    template <typename LabelFn>
+    PublishOutcome publish_with_labels(const DetectionEvent& event, LabelFn&& resolver,
                                        std::optional<JpegBuffer> snapshot) noexcept;
 
     // Non-blocking transport pump.  Call every loop iteration.
@@ -55,29 +50,28 @@ public:
 
     const std::string& device_id() const noexcept { return _device_id; }
 
-private:
+  private:
     bool publish_event_json(const std::string& json) noexcept;
-    bool publish_chunks(const JpegBuffer& jpeg,
-                        const std::string& snapshot_id) noexcept;
+    bool publish_chunks(const JpegBuffer& jpeg, const std::string& snapshot_id) noexcept;
 
-    EventDebouncer  _debouncer;
+    EventDebouncer _debouncer;
     EventSerializer _serializer;
-    std::string     _device_id;
+    std::string _device_id;
     RuntimeConfig::Mqtt _mqtt_cfg;
-    ITransport*     _transport;
-    ILogger*        _log;
+    ITransport* _transport;
+    ILogger* _log;
 };
 
 // ---------------------------------------------------------------------------
 // Template implementation
 // ---------------------------------------------------------------------------
 
-template<typename LabelFn>
-PublishOutcome Publisher::publish_with_labels(const DetectionEvent&     event,
-                                               LabelFn&&                 resolver,
-                                               std::optional<JpegBuffer> snapshot) noexcept {
+template <typename LabelFn>
+PublishOutcome Publisher::publish_with_labels(const DetectionEvent& event, LabelFn&& resolver,
+                                              std::optional<JpegBuffer> snapshot) noexcept {
     if (!_transport->connected()) {
-        if (_log) _log->warn("Publisher: transport not connected, dropping event");
+        if (_log)
+            _log->warn("Publisher: transport not connected, dropping event");
         return PublishOutcome::NotConnected;
     }
 
