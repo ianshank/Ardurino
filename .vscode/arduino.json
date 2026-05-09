@@ -1,0 +1,6 @@
+{
+    "//": "Editor/IntelliSense compatibility only. Builds and uploads run via PlatformIO.",
+    "board": "esp32:esp32:XIAO_ESP32S3",
+    "configuration": "PSRAM=opi,PartitionScheme=default_8MB,CDCOnBoot=cdc",
+    "sketch": "src/main.cpp"
+}

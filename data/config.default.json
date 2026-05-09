@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "device_id": "",
+  "wifi": {
+    "ap_name": "wildlife-setup",
+    "ap_password": "",
+    "sta_timeout_s": 30
+  },
+  "mqtt": {
+    "host": "",
+    "port": 1883,
+    "tls": false,
+    "username": "",
+    "password": "",
+    "client_id": "",
+    "base_topic": "wildlife",
+    "qos": 1,
+    "retain": false,
+    "max_payload_kb": 32,
+    "keepalive_s": 60
+  },
+  "ota": {
+    "enabled": false,
+    "channel": "release",
+    "url": "",
+    "check_interval_h": 24
+  },
+  "inference": {
+    "min_score": 60,
+    "debounce_ms": 5000,
+    "classes_of_interest": [],
+    "poll_interval_ms": 500,
+    "prewake_warmup_ms": 1500,
+    "sscma_invoke_times": 1,
+    "sscma_filter": 0,
+    "sscma_encode": 1
+  },
+  "snapshot": {
+    "enabled": true,
+    "transport": "mqtt_chunked",
+    "source": "sscma",
+    "jpeg_quality": 85,
+    "max_kb": 30,
+    "http_url": ""
+  },
+  "power": {
+    "mode": "pir_deep_sleep",
+    "wake_level": 1,
+    "sleep_seconds": 300,
+    "active_seconds": 30,
+    "low_warn_mv": 3500,
+    "low_cutoff_mv": 3200
+  },
+  "battery": {
+    "divider_ratio": 2.0,
+    "vref_mv": 3300,
+    "samples": 8
+  },
+  "labels": {
+    "path": "/labels.json",
+    "expected_hash": ""
+  },
+  "network": {
+    "retry_base_ms": 1000,
+    "retry_max_ms": 30000,
+    "retry_max_attempts": 10,
+    "retry_jitter_pct": 25
+  },
+  "logging": {
+    "level": "info",
+    "mqtt_topic_suffix": "log"
+  }
+}

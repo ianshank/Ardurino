@@ -1,0 +1,113 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PLATFORMIO_VERSION: "6.1.15"
+  GCOVR_VERSION: "7.2"
+  RUFF_VERSION: "0.15.12"
+  CLANG_FORMAT_PKG: "clang-format-18"
+  COVERAGE_LINE_THRESHOLD: "84"
+  COVERAGE_BRANCH_THRESHOLD: "67"
+
+jobs:
+  host-tests-and-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PlatformIO + gcovr
+        run: |
+          python -m pip install --upgrade pip
+          pip install "platformio==${PLATFORMIO_VERSION}" "gcovr==${GCOVR_VERSION}"
+      - name: Native tests
+        run: pio test -e native --verbose
+      - name: Coverage gate (Core only)
+        run: |
+          mkdir -p coverage_html
+          gcovr \
+            --root . \
+            --object-directory .pio/build/native \
+            --filter 'lib/wildlife_core/' \
+            --exclude 'test/' \
+            --print-summary \
+            --xml-pretty --output coverage.xml \
+            --html-details coverage_html/index.html \
+            --fail-under-line "${COVERAGE_LINE_THRESHOLD}" \
+            --fail-under-branch "${COVERAGE_BRANCH_THRESHOLD}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: |
+            coverage.xml
+            coverage_html/
+
+  embedded-build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env:
+          - xiao_esp32s3_sense
+          - xiao_esp32s3_sense_dev
+          - xiao_esp32s3_camera_web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "platformio==${PLATFORMIO_VERSION}"
+      - name: Compile target firmware
+        env:
+          # The camera_web env requires runtime credentials at build time
+          # (see tools/camera_web_env.py). Inject CI-only placeholders so the
+          # build-time #error guard in src/camera_web_server/main.cpp is
+          # satisfied. Real deployments inject these via the build environment.
+          CAMERA_WIFI_SSID: ci-build-only
+          CAMERA_WIFI_PASSWORD: ci-build-only-password
+          CAMERA_FALLBACK_AP_PASS: ci-build-only-password
+        run: pio run -e ${{ matrix.env }}
+      - name: Static analysis
+        run: pio check -e ${{ matrix.env }} --severity=medium --fail-on-defect=medium
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install clang-format-18
+        run: sudo apt-get update && sudo apt-get install -y "${CLANG_FORMAT_PKG}"
+      # We own style for our libs, our entrypoint, and our host tests.
+      # src/camera_web_server/ is vendored Seeed code and is excluded
+      # via the find expression below (and .clang-format-ignore is
+      # respected automatically by clang-format).
+      - name: clang-format check
+        run: |
+          mapfile -d '' files < <(
+            find lib src/main.cpp test/native \
+              -type f \
+              \( -name '*.hpp' -o -name '*.cpp' -o -name '*.h' -o -name '*.c' \) \
+              -print0
+          )
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No files matched for clang-format check." >&2
+            exit 1
+          fi
+          clang-format-18 --dry-run -Werror "${files[@]}"
+
+  lint-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ruff (pinned)
+        run: pip install "ruff==${RUFF_VERSION}"
+      - name: ruff check tools/
+        run: ruff check tools/

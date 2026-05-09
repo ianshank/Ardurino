@@ -1,0 +1,17 @@
+{
+  "name": "wildlife_adapters",
+  "version": "0.1.0",
+  "description": "Target-only adapter layer for Wildlife Spotter.",
+  "keywords": ["wildlife", "adapters", "esp32", "arduino"],
+  "frameworks": ["arduino"],
+  "platforms": ["espressif32"],
+  "dependencies": [
+    {
+      "name": "wildlife_core"
+    }
+  ],
+  "build": {
+    "srcDir": "src",
+    "includeDir": "include"
+  }
+}

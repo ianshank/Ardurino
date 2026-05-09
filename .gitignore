@@ -1,10 +1,64 @@
 # PlatformIO
 .pio/
+.pioenvs/
+.piolibdeps/
+.vscode/.browse.c_cpp.db*
+.vscode/ipch/
 
 # Python
 .venv/
+venv/
+env/
 __pycache__/
+*.pyc
+*.pyo
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
 
-# OS
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage.xml
+coverage*.html
+coverage_html/
+
+# Build / artifacts
+build/
+dist/
+*.bin
+*.elf
+*.map
+*.hex
+compile_commands.json
+
+# Ad-hoc scratch (test logs, throwaway patches)
+tmp_*.txt
+test_*_out*.txt
+test_*_latest.txt
+test_out.txt
+test_inf_out.txt
+final_test.txt
+ci_*.log
+stream1_*.txt
+stream1_*.ps1
+patch_s1*.py
+create_new_files.py
+
+# OS / editor
 .DS_Store
 Thumbs.db
+*.swp
+*~
+*.bak
+
+# Secrets / generated
+secrets.h
+config.local.json
+.env
+.env.local
+
+# VS Code per-developer/auto-generated files
+.vscode/c_cpp_properties.json
+.vscode/launch.json
