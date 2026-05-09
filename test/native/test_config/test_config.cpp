@@ -1,15 +1,16 @@
-#include <unity.h>
+#include "../test_util/null_logger.hpp"
 #include "wildlife/config/config_subsystem.hpp"
 #include "wildlife/domain/runtime_enums.hpp"
 #include "wildlife/json/mini_json.hpp"
-#include "../test_util/null_logger.hpp"
+
+#include <unity.h>
 
 using namespace wildlife;
 using namespace wildlife::config;
 using namespace wildlife::json;
 using wildlife::test::NullLogger;
 
-void setUp()    {}
+void setUp() {}
 void tearDown() {}
 
 // ---------------------------------------------------------------------------
@@ -118,27 +119,30 @@ void test_config_missing_section_uses_defaults() {
 void test_merger_user_wins_scalar() {
     auto d = parse(R"({"a":1,"b":2})");
     auto u = parse(R"({"a":99})");
-    TEST_ASSERT_TRUE(d.has_value()); TEST_ASSERT_TRUE(u.has_value());
+    TEST_ASSERT_TRUE(d.has_value());
+    TEST_ASSERT_TRUE(u.has_value());
     DefaultsMerger m;
     JVal result = m.merge(*d, *u);
     TEST_ASSERT_EQUAL_INT64(99, result["a"].as_int());
-    TEST_ASSERT_EQUAL_INT64(2,  result["b"].as_int());
+    TEST_ASSERT_EQUAL_INT64(2, result["b"].as_int());
 }
 
 void test_merger_deep_merge_nested() {
     auto d = parse(R"({"outer":{"x":1,"y":2}})");
     auto u = parse(R"({"outer":{"x":99}})");
-    TEST_ASSERT_TRUE(d.has_value()); TEST_ASSERT_TRUE(u.has_value());
+    TEST_ASSERT_TRUE(d.has_value());
+    TEST_ASSERT_TRUE(u.has_value());
     DefaultsMerger m;
     JVal result = m.merge(*d, *u);
     TEST_ASSERT_EQUAL_INT64(99, result["outer"]["x"].as_int());
-    TEST_ASSERT_EQUAL_INT64(2,  result["outer"]["y"].as_int());
+    TEST_ASSERT_EQUAL_INT64(2, result["outer"]["y"].as_int());
 }
 
 void test_merger_unknown_user_keys_preserved() {
     auto d = parse(R"({"a":1})");
     auto u = parse(R"({"b":2})");
-    TEST_ASSERT_TRUE(d.has_value()); TEST_ASSERT_TRUE(u.has_value());
+    TEST_ASSERT_TRUE(d.has_value());
+    TEST_ASSERT_TRUE(u.has_value());
     DefaultsMerger m;
     JVal result = m.merge(*d, *u);
     TEST_ASSERT_EQUAL_INT64(1, result["a"].as_int());
@@ -147,7 +151,7 @@ void test_merger_unknown_user_keys_preserved() {
 
 void test_merger_null_user_falls_back_to_default() {
     JVal d{static_cast<int64_t>(42)};
-    JVal u{};  // null
+    JVal u{}; // null
     DefaultsMerger m;
     JVal result = m.merge(d, u);
     TEST_ASSERT_EQUAL_INT64(42, result.as_int());
@@ -208,7 +212,7 @@ void test_config_parser_with_logger_on_error() {
     // Exercises ConfigParser with a non-null logger on the error path.
     NullLogger log;
     ConfigParser p{&log};
-    auto doc = parse("[1,2,3]");  // array → not an object
+    auto doc = parse("[1,2,3]"); // array → not an object
     TEST_ASSERT_TRUE(doc.has_value());
     RuntimeConfig cfg;
     std::string err;
@@ -227,7 +231,6 @@ void test_config_parser_with_logger_on_success() {
     TEST_ASSERT_TRUE(p.parse(*doc, cfg, err));
     TEST_ASSERT_EQUAL_STRING("logged-dev", cfg.device_id.c_str());
 }
-
 
 // ---------------------------------------------------------------------------
 // S1 new config tests
@@ -255,8 +258,8 @@ void test_config_sscma_defaults_when_section_missing() {
     std::string err;
     p.parse(*doc, cfg, err);
     TEST_ASSERT_EQUAL_UINT(defaults.inference.sscma_invoke_times, cfg.inference.sscma_invoke_times);
-    TEST_ASSERT_EQUAL_UINT(defaults.inference.sscma_filter,       cfg.inference.sscma_filter);
-    TEST_ASSERT_EQUAL_UINT(defaults.inference.sscma_encode,       cfg.inference.sscma_encode);
+    TEST_ASSERT_EQUAL_UINT(defaults.inference.sscma_filter, cfg.inference.sscma_filter);
+    TEST_ASSERT_EQUAL_UINT(defaults.inference.sscma_encode, cfg.inference.sscma_encode);
 }
 
 void test_config_parses_network_retry() {
@@ -268,10 +271,10 @@ void test_config_parses_network_retry() {
     RuntimeConfig cfg;
     std::string err;
     p.parse(*doc, cfg, err);
-    TEST_ASSERT_EQUAL_UINT32(2000u,  cfg.network.retry.base_ms);
+    TEST_ASSERT_EQUAL_UINT32(2000u, cfg.network.retry.base_ms);
     TEST_ASSERT_EQUAL_UINT32(60000u, cfg.network.retry.max_ms);
-    TEST_ASSERT_EQUAL_UINT(5u,       cfg.network.retry.max_attempts);
-    TEST_ASSERT_EQUAL_UINT(10u,      cfg.network.retry.jitter_pct);
+    TEST_ASSERT_EQUAL_UINT(5u, cfg.network.retry.max_attempts);
+    TEST_ASSERT_EQUAL_UINT(10u, cfg.network.retry.jitter_pct);
 }
 
 void test_config_network_defaults_when_section_missing() {
@@ -282,14 +285,14 @@ void test_config_network_defaults_when_section_missing() {
     RuntimeConfig cfg = defaults;
     std::string err;
     p.parse(*doc, cfg, err);
-    TEST_ASSERT_EQUAL_UINT32(defaults.network.retry.base_ms,      cfg.network.retry.base_ms);
-    TEST_ASSERT_EQUAL_UINT32(defaults.network.retry.max_ms,       cfg.network.retry.max_ms);
-    TEST_ASSERT_EQUAL_UINT  (defaults.network.retry.max_attempts, cfg.network.retry.max_attempts);
-    TEST_ASSERT_EQUAL_UINT  (defaults.network.retry.jitter_pct,   cfg.network.retry.jitter_pct);
+    TEST_ASSERT_EQUAL_UINT32(defaults.network.retry.base_ms, cfg.network.retry.base_ms);
+    TEST_ASSERT_EQUAL_UINT32(defaults.network.retry.max_ms, cfg.network.retry.max_ms);
+    TEST_ASSERT_EQUAL_UINT(defaults.network.retry.max_attempts, cfg.network.retry.max_attempts);
+    TEST_ASSERT_EQUAL_UINT(defaults.network.retry.jitter_pct, cfg.network.retry.jitter_pct);
 }
 
 void test_config_parses_power_mode_enum() {
-    auto doc_pir    = parse(R"({"schema_version":1,"power":{"mode":"pir_deep_sleep"}})");
+    auto doc_pir = parse(R"({"schema_version":1,"power":{"mode":"pir_deep_sleep"}})");
     auto doc_always = parse(R"({"schema_version":1,"power":{"mode":"always_on"}})");
     TEST_ASSERT_TRUE(doc_pir.has_value());
     TEST_ASSERT_TRUE(doc_always.has_value());
@@ -297,11 +300,13 @@ void test_config_parses_power_mode_enum() {
     ConfigParser p;
     RuntimeConfig cfg_pir, cfg_always;
     std::string err;
-    p.parse(*doc_pir,    cfg_pir,    err);
+    p.parse(*doc_pir, cfg_pir, err);
     p.parse(*doc_always, cfg_always, err);
 
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(PowerMode::PirDeepSleep), static_cast<int>(cfg_pir.power.mode_enum));
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(PowerMode::AlwaysOn),     static_cast<int>(cfg_always.power.mode_enum));
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(PowerMode::PirDeepSleep),
+                          static_cast<int>(cfg_pir.power.mode_enum));
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(PowerMode::AlwaysOn),
+                          static_cast<int>(cfg_always.power.mode_enum));
 }
 
 int main() {

@@ -1,28 +1,29 @@
-#include <unity.h>
 #include "wildlife/app/event_serializer.hpp"
 #include "wildlife/json/mini_json.hpp"
+
+#include <unity.h>
 
 using namespace wildlife;
 using namespace wildlife::app;
 
-void setUp()    {}
+void setUp() {}
 void tearDown() {}
 
 static DetectionEvent make_event() {
     DetectionEvent ev;
-    ev.event_ts_ms  = 123456789ULL;
-    ev.snapshot_id  = "snap-001";
-    ev.meta.device_id  = "dev-1";
+    ev.event_ts_ms = 123456789ULL;
+    ev.snapshot_id = "snap-001";
+    ev.meta.device_id = "dev-1";
     ev.meta.fw_version = "1.0.0";
-    ev.meta.board_id   = "xiao";
-    ev.meta.rssi       = -72;
+    ev.meta.board_id = "xiao";
+    ev.meta.rssi = -72;
     ev.meta.battery_mv = 3800;
 
     Detection d;
     d.class_id = 2;
-    d.score    = 85;
-    d.bbox     = BBox{10,20,30,40};
-    d.ts_ms    = 123456700ULL;
+    d.score = 85;
+    d.bbox = BBox{10, 20, 30, 40};
+    d.ts_ms = 123456700ULL;
     ev.detections.push_back(d);
     return ev;
 }
@@ -39,16 +40,14 @@ void test_serializer_schema_field() {
     auto json_str = ser.serialize(make_event());
     auto v = json::parse(json_str);
     TEST_ASSERT_TRUE(v.has_value());
-    TEST_ASSERT_EQUAL_STRING("detection.v1",
-        std::string((*v)["schema"].as_str()).c_str());
+    TEST_ASSERT_EQUAL_STRING("detection.v1", std::string((*v)["schema"].as_str()).c_str());
 }
 
 void test_serializer_event_ts() {
     EventSerializer ser;
     auto v = json::parse(ser.serialize(make_event()));
     TEST_ASSERT_TRUE(v.has_value());
-    TEST_ASSERT_EQUAL_UINT64(123456789ULL,
-        static_cast<uint64_t>((*v)["event_ts_ms"].as_int()));
+    TEST_ASSERT_EQUAL_UINT64(123456789ULL, static_cast<uint64_t>((*v)["event_ts_ms"].as_int()));
 }
 
 void test_serializer_one_detection() {
@@ -62,15 +61,14 @@ void test_serializer_one_detection() {
 
 void test_serializer_with_labels() {
     EventSerializer ser;
-    auto json_str = ser.serialize_with_labels(make_event(),
-        [](int32_t id) -> std::string {
-            if (id == 2) return "dog";
-            return "unknown";
-        });
+    auto json_str = ser.serialize_with_labels(make_event(), [](int32_t id) -> std::string {
+        if (id == 2)
+            return "dog";
+        return "unknown";
+    });
     auto v = json::parse(json_str);
     TEST_ASSERT_TRUE(v.has_value());
-    TEST_ASSERT_EQUAL_STRING("dog",
-        std::string((*v)["detections"][0]["label"].as_str()).c_str());
+    TEST_ASSERT_EQUAL_STRING("dog", std::string((*v)["detections"][0]["label"].as_str()).c_str());
 }
 
 void test_json_escape_quotes() {
@@ -87,7 +85,7 @@ void test_serializer_meta_rssi_battery() {
     EventSerializer ser;
     auto v = json::parse(ser.serialize(make_event()));
     TEST_ASSERT_TRUE(v.has_value());
-    TEST_ASSERT_EQUAL_INT64(-72,  (*v)["meta"]["rssi"].as_int());
+    TEST_ASSERT_EQUAL_INT64(-72, (*v)["meta"]["rssi"].as_int());
     TEST_ASSERT_EQUAL_INT64(3800, (*v)["meta"]["battery_mv"].as_int());
 }
 

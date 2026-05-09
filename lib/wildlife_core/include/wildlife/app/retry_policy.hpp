@@ -9,14 +9,14 @@ namespace app {
 // delay_ms(attempt) = base_ms * 2^attempt, capped at max_ms, with ±jitter%.
 // Deterministic seeding: caller passes a 32-bit entropy value to delay_ms().
 struct RetryConfig {
-    uint32_t base_ms       = 1000;
-    uint32_t max_ms        = 30000;
-    uint8_t  max_attempts  = 10;
-    uint8_t  jitter_pct    = 25;   // 0–50; applied symmetrically: ±jitter_pct%
+    uint32_t base_ms = 1000;
+    uint32_t max_ms = 30000;
+    uint8_t max_attempts = 10;
+    uint8_t jitter_pct = 25; // 0–50; applied symmetrically: ±jitter_pct%
 };
 
 class RetryPolicy {
-public:
+  public:
     explicit RetryPolicy(RetryConfig cfg = {}) noexcept;
 
     // Returns backoff delay in ms for the given attempt (0-indexed).
@@ -28,7 +28,7 @@ public:
 
     const RetryConfig& config() const noexcept { return _cfg; }
 
-private:
+  private:
     RetryConfig _cfg;
 };
 

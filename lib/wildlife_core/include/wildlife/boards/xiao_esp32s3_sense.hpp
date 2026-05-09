@@ -12,18 +12,18 @@ namespace boards {
 // PIR: GPIO2 (breadboard default; change via external circuit, not config).
 // BOOT btn: GPIO0.  Battery ADC: GPIO1 (via 1:2 divider on Sense carrier).
 inline constexpr BoardProfile kXiaoEsp32S3Sense{
-    .board_id        = "xiao_esp32s3_sense",
-    .i2c_sda         = 5,
-    .i2c_scl         = 6,
-    .i2c_freq_hz     = 400000,
-    .sscma_i2c_addr  = 0x62,
-    .pir_pin         = 2,
-    .boot_btn_pin    = 0,
-    .portal_hold_ms  = 3000,
+    .board_id = "xiao_esp32s3_sense",
+    .i2c_sda = 5,
+    .i2c_scl = 6,
+    .i2c_freq_hz = 400000,
+    .sscma_i2c_addr = 0x62,
+    .pir_pin = 2,
+    .boot_btn_pin = 0,
+    .portal_hold_ms = 3000,
     .battery_adc_pin = 1,
     .has_battery_adc = true,
-    .psram_required  = true,
-    .has_esp32_camera= true,
+    .psram_required = true,
+    .has_esp32_camera = true,
 };
 
 } // namespace boards

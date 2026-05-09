@@ -1,11 +1,12 @@
 #pragma once
 #include "wildlife/domain/detection.hpp"
+
 #include <vector>
 
 namespace wildlife {
 
 class IInferenceSource {
-public:
+  public:
     virtual ~IInferenceSource() = default;
     // Runs one inference cycle. Returns true on success.
     virtual bool invoke() noexcept = 0;
@@ -16,7 +17,7 @@ public:
 };
 
 class IFrameGrabber {
-public:
+  public:
     virtual ~IFrameGrabber() = default;
     // Fills buf with the JPEG of the last inference frame. Returns true on success.
     virtual bool grab(JpegBuffer& buf) noexcept = 0;

@@ -11,9 +11,9 @@ namespace wildlife {
 
 // RuntimeConfig::Power::mode
 enum class PowerMode : uint8_t {
-    AlwaysOn    = 0,
+    AlwaysOn = 0,
     PirDeepSleep,
-    Unknown,    // catch-all for unrecognised strings
+    Unknown, // catch-all for unrecognised strings
 };
 
 // RuntimeConfig::Snapshot::transport
@@ -35,13 +35,13 @@ enum class SnapshotSource : uint8_t {
 // Conversions — guaranteed noexcept; never throw, never return nullptr.
 // -----------------------------------------------------------------------
 
-PowerMode        power_mode_from_string   (std::string_view s) noexcept;
-std::string_view power_mode_to_string     (PowerMode m)        noexcept;
+PowerMode power_mode_from_string(std::string_view s) noexcept;
+std::string_view power_mode_to_string(PowerMode m) noexcept;
 
 SnapshotTransport snapshot_transport_from_string(std::string_view s) noexcept;
-std::string_view  snapshot_transport_to_string  (SnapshotTransport t) noexcept;
+std::string_view snapshot_transport_to_string(SnapshotTransport t) noexcept;
 
-SnapshotSource   snapshot_source_from_string (std::string_view s) noexcept;
-std::string_view snapshot_source_to_string   (SnapshotSource src) noexcept;
+SnapshotSource snapshot_source_from_string(std::string_view s) noexcept;
+std::string_view snapshot_source_to_string(SnapshotSource src) noexcept;
 
 } // namespace wildlife

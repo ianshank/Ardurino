@@ -1,25 +1,27 @@
-#include <unity.h>
+#include "../test_util/null_logger.hpp"
 #include "wildlife/app/json_label_resolver.hpp"
 #include "wildlife/io/iconfig_store.hpp"
-#include "../test_util/null_logger.hpp"
+
 #include <string>
+#include <unity.h>
 #include <unordered_map>
 
 using namespace wildlife;
 using namespace wildlife::app;
 using wildlife::test::NullLogger;
 
-void setUp()    {}
+void setUp() {}
 void tearDown() {}
 
 // In-memory IConfigStore stub for tests.
 class MemStore : public IConfigStore {
-public:
+  public:
     std::unordered_map<std::string, std::string> files;
 
     bool read(const std::string& path, std::string& out) noexcept override {
         auto it = files.find(path);
-        if (it == files.end()) return false;
+        if (it == files.end())
+            return false;
         out = it->second;
         return true;
     }
@@ -27,12 +29,8 @@ public:
         files[path] = data;
         return true;
     }
-    bool exists(const std::string& path) noexcept override {
-        return files.count(path) > 0;
-    }
-    bool remove(const std::string& path) noexcept override {
-        return files.erase(path) > 0;
-    }
+    bool exists(const std::string& path) noexcept override { return files.count(path) > 0; }
+    bool remove(const std::string& path) noexcept override { return files.erase(path) > 0; }
 };
 
 static const std::string kLabels = R"({"0":"person","1":"cat","2":"dog"})";
@@ -99,7 +97,7 @@ void test_loaded_true_even_when_all_keys_non_integer() {
     store.files["/labels.json"] = R"({"abc":"ignored","xyz":"skipped"})";
     JsonLabelResolver r;
     TEST_ASSERT_TRUE(r.load(store, "/labels.json"));
-    TEST_ASSERT_TRUE(r.loaded());   // was broken before _loaded flag fix
+    TEST_ASSERT_TRUE(r.loaded()); // was broken before _loaded flag fix
 }
 
 void test_with_logger_error_path() {
@@ -120,7 +118,7 @@ void test_with_logger_success_path() {
     JsonLabelResolver r{&log};
     MemStore store;
     store.files["/labels.json"] = kLabels;
-    TEST_ASSERT_TRUE(r.load(store, "/labels.json"));   // logs info
+    TEST_ASSERT_TRUE(r.load(store, "/labels.json")); // logs info
     TEST_ASSERT_TRUE(r.loaded());
     TEST_ASSERT_EQUAL_STRING("cat", r.name(1).c_str());
 }

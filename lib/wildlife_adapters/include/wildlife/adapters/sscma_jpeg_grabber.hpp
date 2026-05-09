@@ -3,15 +3,15 @@
 // SscmaJpegGrabber — IFrameGrabber backed by the SSCMA library's last-image buffer.
 // Shares the SSCMA instance already owned by SscmaI2cSource.
 
-#include <Seeed_Arduino_SSCMA.h>
-
 #include "wildlife/io/ilogger.hpp"
 #include "wildlife/io/iperipheral.hpp"
+
+#include <Seeed_Arduino_SSCMA.h>
 
 namespace wildlife {
 
 class SscmaJpegGrabber final : public IFrameGrabber {
-public:
+  public:
     // sscma   — shared SSCMA instance (must outlive this object)
     // logger  — optional diagnostic logger
     explicit SscmaJpegGrabber(SSCMA& sscma, ILogger* logger = nullptr) noexcept
@@ -22,8 +22,8 @@ public:
     // or the model did not encode an image in the last cycle).
     bool grab(JpegBuffer& buf) noexcept override;
 
-private:
-    SSCMA*   _sscma;
+  private:
+    SSCMA* _sscma;
     ILogger* _logger;
 };
 

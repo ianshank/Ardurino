@@ -25,7 +25,6 @@
 #define WILDLIFE_FW_VERSION "unknown_ide_build"
 #endif
 
-
 #include "wildlife/adapters/esp_clock.hpp"
 #include "wildlife/adapters/serial_logger.hpp"
 #include "wildlife/adapters/sscma_i2c_source.hpp"
@@ -37,11 +36,11 @@ namespace {
 
 // Use static storage so destructors don't fire on reset and so we don't
 // rely on heap allocation order between setup() and loop().
-wildlife::SerialLogger             g_logger(Serial, wildlife::LogLevel::Debug);
-wildlife::EspClock                 g_clock;
+wildlife::SerialLogger g_logger(Serial, wildlife::LogLevel::Debug);
+wildlife::EspClock g_clock;
 wildlife::RuntimeConfig::Inference g_inference_cfg{}; // defaults are fine for smoke test
-wildlife::SscmaI2cSource*          g_source  = nullptr;
-wildlife::SscmaJpegGrabber*        g_grabber = nullptr;
+wildlife::SscmaI2cSource* g_source = nullptr;
+wildlife::SscmaJpegGrabber* g_grabber = nullptr;
 
 void log_kv_line(const char* line) {
     Serial.println(line);
@@ -51,7 +50,8 @@ void log_kv_line(const char* line) {
 
 void setup() {
     Serial.begin(115200);
-    while (!Serial && millis() < 2000) { /* wait for USB CDC */ }
+    while (!Serial && millis() < 2000) { /* wait for USB CDC */
+    }
 
     Serial.println();
     Serial.print("WSPOT|boot       fw=");
@@ -73,8 +73,7 @@ void setup() {
     // Disable it for the smoke test to verify basic detection works first.
     g_inference_cfg.sscma_encode = 0;
 
-    static wildlife::SscmaI2cSource source(Wire, profile, g_inference_cfg,
-                                           &g_clock, &g_logger);
+    static wildlife::SscmaI2cSource source(Wire, profile, g_inference_cfg, &g_clock, &g_logger);
     g_source = &source;
 
     const bool ok = g_source->begin();
@@ -97,7 +96,7 @@ void loop() {
     }
 
     const uint32_t t0 = millis();
-    const bool     ok = g_source->invoke();
+    const bool ok = g_source->invoke();
     const uint32_t dt = millis() - t0;
 
     const auto& dets = g_source->detections();
@@ -139,4 +138,3 @@ void loop() {
     // Honour the configured poll cadence (default 500 ms).
     delay(g_inference_cfg.poll_interval_ms);
 }
-

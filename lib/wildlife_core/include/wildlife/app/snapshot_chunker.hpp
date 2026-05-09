@@ -5,8 +5,9 @@
 // The first chunk (seq==0) carries a SHA-256 hex digest of the full JPEG.
 
 #include "wildlife/domain/detection.hpp"
-#include <cstdint>
+
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -15,8 +16,8 @@ namespace app {
 
 struct SnapshotChunk {
     std::string snapshot_id;
-    uint32_t    seq{0};
-    uint32_t    total{0};   // total number of chunks
+    uint32_t seq{0};
+    uint32_t total{0}; // total number of chunks
     std::vector<uint8_t> data;
     std::string sha256_hex; // only on seq==0; empty otherwise
 };
@@ -25,9 +26,8 @@ struct SnapshotChunk {
 // max_bytes: maximum payload bytes per chunk (data field only).
 // snapshot_id: opaque ID carried in each chunk.
 // Returns empty vector if buf.data is empty or max_bytes == 0.
-std::vector<SnapshotChunk> chunk_jpeg(const JpegBuffer& buf,
-                                       std::size_t      max_bytes,
-                                       const std::string& snapshot_id) noexcept;
+std::vector<SnapshotChunk> chunk_jpeg(const JpegBuffer& buf, std::size_t max_bytes,
+                                      const std::string& snapshot_id) noexcept;
 
 // Reassemble SnapshotChunks back into a JpegBuffer.
 // Chunks must be sorted by seq. Returns empty JpegBuffer on error.

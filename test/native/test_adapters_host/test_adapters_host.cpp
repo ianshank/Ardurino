@@ -3,12 +3,13 @@
 // Tests logic-only paths of adapter interfaces using FakeConfigStore.
 // Full LittleFsConfigStore requires hardware and is validated via HIL only.
 
-#include <unity.h>
 #include "../test_util/fake_config_store.hpp"
+
+#include <unity.h>
 
 using namespace wildlife::test;
 
-void setUp()    {}
+void setUp() {}
 void tearDown() {}
 
 // ---------------------------------------------------------------------------

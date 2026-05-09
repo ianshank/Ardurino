@@ -5,6 +5,7 @@
 // Used by SerialLogger (min-level wiring) and config-driven level selection.
 
 #include "wildlife/io/ilogger.hpp"
+
 #include <cstdio>
 #include <string>
 #include <string_view>
@@ -24,24 +25,57 @@ namespace detail {
 inline std::string to_kv_str(std::string_view v) {
     std::string r;
     r.reserve(v.size());
-    for (char c : v) r += (c == ' ') ? '_' : c;
+    for (char c : v)
+        r += (c == ' ') ? '_' : c;
     return r;
 }
-inline std::string to_kv_str(const std::string& v) { return to_kv_str(std::string_view{v}); }
-inline std::string to_kv_str(const char* v) { return to_kv_str(std::string_view{v ? v : ""}); }
-inline std::string to_kv_str(bool v) { return v ? "true" : "false"; }
-inline std::string to_kv_str(int v)           { char b[16]; std::snprintf(b,sizeof(b),"%d",v);   return b; }
-inline std::string to_kv_str(unsigned int v)  { char b[16]; std::snprintf(b,sizeof(b),"%u",v);   return b; }
-inline std::string to_kv_str(long v)          { char b[24]; std::snprintf(b,sizeof(b),"%ld",v);  return b; }
-inline std::string to_kv_str(unsigned long v) { char b[24]; std::snprintf(b,sizeof(b),"%lu",v);  return b; }
-inline std::string to_kv_str(float v)         { char b[32]; std::snprintf(b,sizeof(b),"%.4g",static_cast<double>(v)); return b; }
-inline std::string to_kv_str(double v)        { char b[32]; std::snprintf(b,sizeof(b),"%.4g",v); return b; }
+inline std::string to_kv_str(const std::string& v) {
+    return to_kv_str(std::string_view{v});
+}
+inline std::string to_kv_str(const char* v) {
+    return to_kv_str(std::string_view{v ? v : ""});
+}
+inline std::string to_kv_str(bool v) {
+    return v ? "true" : "false";
+}
+inline std::string to_kv_str(int v) {
+    char b[16];
+    std::snprintf(b, sizeof(b), "%d", v);
+    return b;
+}
+inline std::string to_kv_str(unsigned int v) {
+    char b[16];
+    std::snprintf(b, sizeof(b), "%u", v);
+    return b;
+}
+inline std::string to_kv_str(long v) {
+    char b[24];
+    std::snprintf(b, sizeof(b), "%ld", v);
+    return b;
+}
+inline std::string to_kv_str(unsigned long v) {
+    char b[24];
+    std::snprintf(b, sizeof(b), "%lu", v);
+    return b;
+}
+inline std::string to_kv_str(float v) {
+    char b[32];
+    std::snprintf(b, sizeof(b), "%.4g", static_cast<double>(v));
+    return b;
+}
+inline std::string to_kv_str(double v) {
+    char b[32];
+    std::snprintf(b, sizeof(b), "%.4g", v);
+    return b;
+}
 } // namespace detail
 
 /// Build a space-separated "key=value key2=value2 ..." string.
 /// Spaces within string values are replaced with underscores.
 /// Usage: format_kv("class", 3, "score", 0.85f)
-inline std::string format_kv() noexcept { return {}; }
+inline std::string format_kv() noexcept {
+    return {};
+}
 
 template <typename K, typename V, typename... Rest>
 std::string format_kv(K&& key, V&& val, Rest&&... rest) {

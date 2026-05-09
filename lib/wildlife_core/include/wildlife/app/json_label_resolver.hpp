@@ -6,6 +6,7 @@
 
 #include "wildlife/io/iconfig_store.hpp"
 #include "wildlife/io/ilogger.hpp"
+
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -14,7 +15,7 @@ namespace wildlife {
 namespace app {
 
 class JsonLabelResolver {
-public:
+  public:
     // Optional logger for load errors and diagnostics.
     explicit JsonLabelResolver(ILogger* log = nullptr) noexcept;
 
@@ -31,9 +32,9 @@ public:
     // True if load() has succeeded at least once.
     bool loaded() const noexcept { return _loaded; }
 
-private:
-    ILogger*    _log{nullptr};
-    bool        _loaded{false};
+  private:
+    ILogger* _log{nullptr};
+    bool _loaded{false};
     std::unordered_map<int32_t, std::string> _labels;
     std::string _hash;
 };

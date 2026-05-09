@@ -1,9 +1,10 @@
-#include <unity.h>
 #include "wildlife/domain/runtime_enums.hpp"
+
+#include <unity.h>
 
 using namespace wildlife;
 
-void setUp()    {}
+void setUp() {}
 void tearDown() {}
 
 // ---------------------------------------------------------------------------
@@ -22,7 +23,7 @@ void test_power_mode_always_on() {
 
 void test_power_mode_unknown() {
     TEST_ASSERT_EQUAL_INT(static_cast<int>(PowerMode::Unknown),
-                          static_cast<int>(power_mode_from_string("pir")));  // old value
+                          static_cast<int>(power_mode_from_string("pir"))); // old value
     TEST_ASSERT_EQUAL_INT(static_cast<int>(PowerMode::Unknown),
                           static_cast<int>(power_mode_from_string("")));
 }
@@ -56,9 +57,8 @@ void test_snapshot_transport_old_value_unknown() {
 
 void test_snapshot_transport_round_trip() {
     for (auto t : {SnapshotTransport::MqttChunked, SnapshotTransport::HttpUrl}) {
-        TEST_ASSERT_EQUAL_INT(
-            static_cast<int>(t),
-            static_cast<int>(snapshot_transport_from_string(snapshot_transport_to_string(t))));
+        TEST_ASSERT_EQUAL_INT(static_cast<int>(t), static_cast<int>(snapshot_transport_from_string(
+                                                       snapshot_transport_to_string(t))));
     }
 }
 
@@ -88,9 +88,8 @@ void test_snapshot_source_unknown() {
 
 void test_snapshot_source_round_trip() {
     for (auto s : {SnapshotSource::Sscma, SnapshotSource::Esp32Cam, SnapshotSource::Null}) {
-        TEST_ASSERT_EQUAL_INT(
-            static_cast<int>(s),
-            static_cast<int>(snapshot_source_from_string(snapshot_source_to_string(s))));
+        TEST_ASSERT_EQUAL_INT(static_cast<int>(s), static_cast<int>(snapshot_source_from_string(
+                                                       snapshot_source_to_string(s))));
     }
 }
 

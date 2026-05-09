@@ -18,26 +18,26 @@ struct BBox {
 };
 
 struct Detection {
-    int32_t  class_id{-1};
-    uint8_t  score{0};   // 0–100
-    BBox     bbox{};
-    uint64_t ts_ms{0};   // monotonic ms (from IClock)
+    int32_t class_id{-1};
+    uint8_t score{0}; // 0–100
+    BBox bbox{};
+    uint64_t ts_ms{0}; // monotonic ms (from IClock)
 };
 
 struct DeviceMeta {
     std::string device_id;
     std::string fw_version;
     std::string board_id;
-    int16_t     rssi{0};
-    int32_t     battery_mv{0};
+    int16_t rssi{0};
+    int32_t battery_mv{0};
 };
 
 // A snapshot_id is empty when no image is attached to this event.
 struct DetectionEvent {
     std::vector<Detection> detections;
-    DeviceMeta             meta;
-    uint64_t               event_ts_ms{0};
-    std::string            snapshot_id;
+    DeviceMeta meta;
+    uint64_t event_ts_ms{0};
+    std::string snapshot_id;
 };
 
 struct JpegBuffer {

@@ -17,27 +17,35 @@ namespace json {
 enum class JType : uint8_t { Null, Bool, Int64, Double, Str, Array, Object };
 
 class JVal {
-public:
+  public:
     // --- Constructors ---
     JVal() noexcept = default;
-    explicit JVal(bool v)        noexcept : _type(JType::Bool),   _b(v)            {}
-    explicit JVal(int64_t v)     noexcept : _type(JType::Int64),  _i(v)            {}
-    explicit JVal(int v)         noexcept : _type(JType::Int64),  _i(v)            {}
-    explicit JVal(double v)      noexcept : _type(JType::Double), _d(v)            {}
-    explicit JVal(std::string v) noexcept : _type(JType::Str),    _s(std::move(v)) {}
+    explicit JVal(bool v) noexcept : _type(JType::Bool), _b(v) {}
+    explicit JVal(int64_t v) noexcept : _type(JType::Int64), _i(v) {}
+    explicit JVal(int v) noexcept : _type(JType::Int64), _i(v) {}
+    explicit JVal(double v) noexcept : _type(JType::Double), _d(v) {}
+    explicit JVal(std::string v) noexcept : _type(JType::Str), _s(std::move(v)) {}
 
-    static JVal make_array()  noexcept { JVal v; v._type = JType::Array;  return v; }
-    static JVal make_object() noexcept { JVal v; v._type = JType::Object; return v; }
+    static JVal make_array() noexcept {
+        JVal v;
+        v._type = JType::Array;
+        return v;
+    }
+    static JVal make_object() noexcept {
+        JVal v;
+        v._type = JType::Object;
+        return v;
+    }
 
     // --- Type ---
-    JType type()    const noexcept { return _type; }
-    bool  is_null() const noexcept { return _type == JType::Null; }
+    JType type() const noexcept { return _type; }
+    bool is_null() const noexcept { return _type == JType::Null; }
 
     // --- Read accessors (return default on type mismatch) ---
-    bool             as_bool  (bool           def = false) const noexcept;
-    int64_t          as_int   (int64_t        def = 0)     const noexcept;
-    double           as_double(double         def = 0.0)   const noexcept;
-    std::string_view as_str   (std::string_view def = {})  const noexcept;
+    bool as_bool(bool def = false) const noexcept;
+    int64_t as_int(int64_t def = 0) const noexcept;
+    double as_double(double def = 0.0) const noexcept;
+    std::string_view as_str(std::string_view def = {}) const noexcept;
 
     std::size_t size() const noexcept;
     bool contains(std::string_view key) const noexcept;
@@ -58,20 +66,20 @@ public:
     // --- Raw iteration (use with care) ---
     using Pair = std::pair<std::string, JVal>;
     const std::vector<Pair>& as_object_ref() const noexcept;
-    const std::vector<JVal>& as_array_ref()  const noexcept;
+    const std::vector<JVal>& as_array_ref() const noexcept;
 
-private:
-    JType  _type{JType::Null};
-    bool   _b{false};
+  private:
+    JType _type{JType::Null};
+    bool _b{false};
     int64_t _i{0};
-    double  _d{0.0};
-    std::string   _s;
+    double _d{0.0};
+    std::string _s;
     std::vector<JVal> _arr;
     std::vector<Pair> _obj;
 
     static const JVal& null_sentinel() noexcept;
-    static const std::vector<Pair>&    empty_obj() noexcept;
-    static const std::vector<JVal>&    empty_arr() noexcept;
+    static const std::vector<Pair>& empty_obj() noexcept;
+    static const std::vector<JVal>& empty_arr() noexcept;
 };
 
 // Parse JSON from string_view. Returns nullopt on any syntax error.

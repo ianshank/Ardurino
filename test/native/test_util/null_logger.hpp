@@ -10,7 +10,7 @@ namespace wildlife {
 namespace test {
 
 class NullLogger : public ILogger {
-public:
+  public:
     void log(LogLevel, std::string_view) noexcept override {}
 };
 

@@ -8,15 +8,15 @@ namespace wildlife {
 
 WakeCause EspPowerManager::wake_cause() const noexcept {
     switch (esp_sleep_get_wakeup_cause()) {
-        case ESP_SLEEP_WAKEUP_EXT0:
-        case ESP_SLEEP_WAKEUP_EXT1:
-            return WakeCause::PirGpio;
-        case ESP_SLEEP_WAKEUP_TIMER:
-            return WakeCause::Timer;
-        case ESP_SLEEP_WAKEUP_UNDEFINED:
-            return WakeCause::PowerOn;
-        default:
-            return WakeCause::Unknown;
+    case ESP_SLEEP_WAKEUP_EXT0:
+    case ESP_SLEEP_WAKEUP_EXT1:
+        return WakeCause::PirGpio;
+    case ESP_SLEEP_WAKEUP_TIMER:
+        return WakeCause::Timer;
+    case ESP_SLEEP_WAKEUP_UNDEFINED:
+        return WakeCause::PowerOn;
+    default:
+        return WakeCause::Unknown;
     }
 }
 

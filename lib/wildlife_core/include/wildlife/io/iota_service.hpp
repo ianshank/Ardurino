@@ -12,18 +12,18 @@ namespace wildlife {
 
 struct OtaConfig {
     std::string url;
-    std::string channel;   // "release", "beta", etc.
-    uint8_t     check_interval_h{24};
+    std::string channel; // "release", "beta", etc.
+    uint8_t check_interval_h{24};
 };
 
 enum class OtaCheckResult : uint8_t {
-    UpToDate = 0,   // no update available
-    Available,      // an update is ready to apply
-    Error,          // check failed (network / server error)
+    UpToDate = 0, // no update available
+    Available,    // an update is ready to apply
+    Error,        // check failed (network / server error)
 };
 
 class IOtaService {
-public:
+  public:
     virtual ~IOtaService() = default;
 
     // Check whether an update is available.  Non-blocking on failure.

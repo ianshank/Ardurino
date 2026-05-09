@@ -22,13 +22,12 @@ struct ProvisionResult {
 };
 
 class IProvisioner {
-public:
+  public:
     virtual ~IProvisioner() = default;
 
     // Start the captive portal.  ap_name / ap_password come from RuntimeConfig.
     // Returns false immediately if the portal cannot start.
-    virtual bool start(std::string_view ap_name,
-                       std::string_view ap_password) noexcept = 0;
+    virtual bool start(std::string_view ap_name, std::string_view ap_password) noexcept = 0;
 
     // Non-blocking poll; returns true once credentials are ready.
     virtual bool poll() noexcept = 0;

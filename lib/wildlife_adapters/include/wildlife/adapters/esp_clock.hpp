@@ -5,7 +5,7 @@
 namespace wildlife {
 
 class EspClock final : public IClock {
-public:
+  public:
     uint64_t millis() const noexcept override;
 };
 

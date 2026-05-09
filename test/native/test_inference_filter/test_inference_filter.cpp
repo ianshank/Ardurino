@@ -1,5 +1,6 @@
-#include <unity.h>
 #include "wildlife/app/inference_filter.hpp"
+
+#include <unity.h>
 
 using wildlife::matches_class_filter;
 

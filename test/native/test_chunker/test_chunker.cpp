@@ -1,10 +1,11 @@
-#include <unity.h>
 #include "wildlife/app/snapshot_chunker.hpp"
+
+#include <unity.h>
 
 using namespace wildlife;
 using namespace wildlife::app;
 
-void setUp()    {}
+void setUp() {}
 void tearDown() {}
 
 static JpegBuffer make_buf(std::size_t n, uint8_t fill = 0xAA) {
@@ -25,7 +26,7 @@ void test_zero_max_returns_empty() {
 }
 
 void test_single_chunk_small_buf() {
-    auto buf    = make_buf(50);
+    auto buf = make_buf(50);
     auto chunks = chunk_jpeg(buf, 64, "snap1");
     TEST_ASSERT_EQUAL_UINT(1u, chunks.size());
     TEST_ASSERT_EQUAL_UINT(1u, chunks[0].total);
@@ -35,7 +36,7 @@ void test_single_chunk_small_buf() {
 }
 
 void test_multi_chunk() {
-    auto buf    = make_buf(100);
+    auto buf = make_buf(100);
     auto chunks = chunk_jpeg(buf, 40, "snap2");
     TEST_ASSERT_EQUAL_UINT(3u, chunks.size());
     TEST_ASSERT_EQUAL_UINT(0u, chunks[0].seq);
@@ -47,17 +48,17 @@ void test_multi_chunk() {
     TEST_ASSERT_EQUAL_UINT(20u, chunks[2].data.size());
     // sha256 only on seq 0
     TEST_ASSERT_FALSE(chunks[0].sha256_hex.empty());
-    TEST_ASSERT_TRUE (chunks[1].sha256_hex.empty());
+    TEST_ASSERT_TRUE(chunks[1].sha256_hex.empty());
 }
 
 void test_exact_boundary() {
-    auto buf    = make_buf(64);
+    auto buf = make_buf(64);
     auto chunks = chunk_jpeg(buf, 64, "x");
     TEST_ASSERT_EQUAL_UINT(1u, chunks.size());
 }
 
 void test_sha256_hex_length() {
-    auto buf    = make_buf(10, 0xFF);
+    auto buf = make_buf(10, 0xFF);
     auto chunks = chunk_jpeg(buf, 1024, "id");
     TEST_ASSERT_EQUAL_UINT(64u, chunks[0].sha256_hex.size());
 }
@@ -66,13 +67,12 @@ void test_sha256_known_value() {
     // SHA-256 of empty string
     uint8_t empty_data[] = {};
     std::string h = sha256_hex(empty_data, 0);
-    TEST_ASSERT_EQUAL_STRING(
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        h.c_str());
+    TEST_ASSERT_EQUAL_STRING("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                             h.c_str());
 }
 
 void test_reassemble_roundtrip() {
-    auto buf    = make_buf(100, 0xBB);
+    auto buf = make_buf(100, 0xBB);
     auto chunks = chunk_jpeg(buf, 30, "rid");
     auto rebuilt = reassemble_chunks(chunks);
     TEST_ASSERT_EQUAL_UINT(buf.data.size(), rebuilt.data.size());
@@ -86,7 +86,7 @@ void test_reassemble_empty() {
 }
 
 void test_snapshot_id_preserved() {
-    auto buf    = make_buf(10);
+    auto buf = make_buf(10);
     auto chunks = chunk_jpeg(buf, 5, "myid");
     for (const auto& c : chunks) {
         TEST_ASSERT_EQUAL_STRING("myid", c.snapshot_id.c_str());

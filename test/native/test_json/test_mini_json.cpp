@@ -1,9 +1,10 @@
-#include <unity.h>
 #include "wildlife/json/mini_json.hpp"
+
+#include <unity.h>
 
 using namespace wildlife::json;
 
-void setUp()    {}
+void setUp() {}
 void tearDown() {}
 
 // --- parse ---

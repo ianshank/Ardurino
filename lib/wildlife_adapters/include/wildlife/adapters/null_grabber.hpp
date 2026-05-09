@@ -5,7 +5,7 @@
 namespace wildlife {
 
 class NullGrabber final : public IFrameGrabber {
-public:
+  public:
     bool grab(JpegBuffer& buf) noexcept override;
 };
 

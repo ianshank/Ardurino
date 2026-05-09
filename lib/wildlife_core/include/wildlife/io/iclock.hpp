@@ -4,7 +4,7 @@
 namespace wildlife {
 
 class IClock {
-public:
+  public:
     virtual ~IClock() = default;
     virtual uint64_t millis() const noexcept = 0;
 };

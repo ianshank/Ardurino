@@ -18,73 +18,104 @@ TransitionResult transition(AppState state, AppEvent event) noexcept {
 
     case S::Boot:
         switch (event) {
-            case E::WakeUp:       return {S::ConfigLoad, {A::LoadConfig,   kNone}};
-            case E::ConfigFailed: return {S::SafeMode,   {A::SetSafeMode,  A::OpenPortal}};
-            default: break;
+        case E::WakeUp:
+            return {S::ConfigLoad, {A::LoadConfig, kNone}};
+        case E::ConfigFailed:
+            return {S::SafeMode, {A::SetSafeMode, A::OpenPortal}};
+        default:
+            break;
         }
         break;
 
     case S::ConfigLoad:
         switch (event) {
-            case E::ConfigLoaded: return {S::Network,  {A::ClearSafeMode,  A::ConnectNetwork}};
-            case E::ConfigFailed: return {S::SafeMode, {A::SetSafeMode,    A::OpenPortal}};
-            default: break;
+        case E::ConfigLoaded:
+            return {S::Network, {A::ClearSafeMode, A::ConnectNetwork}};
+        case E::ConfigFailed:
+            return {S::SafeMode, {A::SetSafeMode, A::OpenPortal}};
+        default:
+            break;
         }
         break;
 
     case S::SafeMode:
         switch (event) {
-            case E::ProvisionDone: return {S::ConfigLoad, {A::LoadConfig,   kNone}};
-            case E::FatalError:    return {S::Error,      {A::Reboot,       kNone}};
-            default: break;
+        case E::ProvisionDone:
+            return {S::ConfigLoad, {A::LoadConfig, kNone}};
+        case E::FatalError:
+            return {S::Error, {A::Reboot, kNone}};
+        default:
+            break;
         }
         break;
 
     case S::Network:
         switch (event) {
-            case E::NetworkUp:   return {S::Active,   {A::StartInference,  kNone}};
-            case E::NetworkDown: return {S::Error,    {A::ScheduleRetry,   kNone}};
-            case E::FatalError:  return {S::Error,    {A::Reboot,          kNone}};
-            default: break;
+        case E::NetworkUp:
+            return {S::Active, {A::StartInference, kNone}};
+        case E::NetworkDown:
+            return {S::Error, {A::ScheduleRetry, kNone}};
+        case E::FatalError:
+            return {S::Error, {A::Reboot, kNone}};
+        default:
+            break;
         }
         break;
 
     case S::Active:
         switch (event) {
-            case E::SleepNow:     return {S::Sleeping,  {A::EnterSleep,     kNone}};
-            case E::NetworkDown:  return {S::Error,     {A::ScheduleRetry,  kNone}};
-            case E::FatalError:   return {S::Error,     {A::Reboot,         kNone}};
-            case E::OtaCheckDue:  return {S::Updating,  {A::CheckOta,       kNone}};
-            default: break;
+        case E::SleepNow:
+            return {S::Sleeping, {A::EnterSleep, kNone}};
+        case E::NetworkDown:
+            return {S::Error, {A::ScheduleRetry, kNone}};
+        case E::FatalError:
+            return {S::Error, {A::Reboot, kNone}};
+        case E::OtaCheckDue:
+            return {S::Updating, {A::CheckOta, kNone}};
+        default:
+            break;
         }
         break;
 
     case S::Sleeping:
         switch (event) {
-            case E::WakeUp:      return {S::ConfigLoad, {A::LoadConfig,    kNone}};
-            default: break;
+        case E::WakeUp:
+            return {S::ConfigLoad, {A::LoadConfig, kNone}};
+        default:
+            break;
         }
         break;
 
     case S::Error:
         switch (event) {
-            case E::RetryTimeout:  return {S::Network,  {A::ConnectNetwork, kNone}};
-            case E::NetworkUp:     return {S::Active,   {A::StartInference, kNone}};
-            case E::FatalError:    return {S::Error,    {A::Reboot,         kNone}};
-            default: break;
+        case E::RetryTimeout:
+            return {S::Network, {A::ConnectNetwork, kNone}};
+        case E::NetworkUp:
+            return {S::Active, {A::StartInference, kNone}};
+        case E::FatalError:
+            return {S::Error, {A::Reboot, kNone}};
+        default:
+            break;
         }
         break;
 
     case S::Updating:
         switch (event) {
-            case E::OtaAvailable:  return {S::Updating,    {A::ApplyOta,       kNone}};
-            case E::OtaApplied:    return {S::Updating,    {A::Reboot,         kNone}};
-            case E::OtaFailed:     return {S::Active,      {A::StartInference, kNone}};
-            case E::NetworkDown:   return {S::Error,       {A::ScheduleRetry,  kNone}};
-            case E::FatalError:    return {S::Error,       {A::Reboot,         kNone}};
-            // No update found — back to normal operation
-            case E::OtaUpToDate:   return {S::Active,      {A::MarkValid,      A::StartInference}};
-            default: break;
+        case E::OtaAvailable:
+            return {S::Updating, {A::ApplyOta, kNone}};
+        case E::OtaApplied:
+            return {S::Updating, {A::Reboot, kNone}};
+        case E::OtaFailed:
+            return {S::Active, {A::StartInference, kNone}};
+        case E::NetworkDown:
+            return {S::Error, {A::ScheduleRetry, kNone}};
+        case E::FatalError:
+            return {S::Error, {A::Reboot, kNone}};
+        // No update found — back to normal operation
+        case E::OtaUpToDate:
+            return {S::Active, {A::MarkValid, A::StartInference}};
+        default:
+            break;
         }
         break;
 

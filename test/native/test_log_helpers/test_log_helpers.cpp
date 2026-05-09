@@ -1,9 +1,10 @@
-#include <unity.h>
 #include "wildlife/app/log_helpers.hpp"
+
+#include <unity.h>
 
 using namespace wildlife;
 
-void setUp()    {}
+void setUp() {}
 void tearDown() {}
 
 void test_parse_debug() {
@@ -41,16 +42,15 @@ void test_parse_mixed_case() {
 void test_parse_unknown_falls_back_to_info() {
     TEST_ASSERT_EQUAL_INT(static_cast<int>(LogLevel::Info),
                           static_cast<int>(parse_log_level("verbose")));
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(LogLevel::Info),
-                          static_cast<int>(parse_log_level("")));
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(LogLevel::Info), static_cast<int>(parse_log_level("")));
     TEST_ASSERT_EQUAL_INT(static_cast<int>(LogLevel::Info),
                           static_cast<int>(parse_log_level("trace")));
 }
 
 void test_level_name_round_trip() {
     for (auto lvl : {LogLevel::Debug, LogLevel::Info, LogLevel::Warn, LogLevel::Error}) {
-        const auto name  = log_level_name(lvl);
-        const auto back  = parse_log_level(name);
+        const auto name = log_level_name(lvl);
+        const auto back = parse_log_level(name);
         TEST_ASSERT_EQUAL_INT(static_cast<int>(lvl), static_cast<int>(back));
     }
 }

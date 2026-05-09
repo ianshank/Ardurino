@@ -1,7 +1,7 @@
-#include <unity.h>
-
 #include "wildlife/semver.hpp"
 #include "wildlife/version.hpp"
+
+#include <unity.h>
 
 using wildlife::parse_semver;
 using wildlife::SemVer;
