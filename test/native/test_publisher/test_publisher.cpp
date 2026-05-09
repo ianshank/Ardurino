@@ -104,15 +104,45 @@ void test_snapshot_is_published_when_provided() {
     const auto rc = pub.publish(make_event(1000), "deer", std::make_optional(jpeg));
 
     TEST_ASSERT_EQUAL_INT(static_cast<int>(PublishOutcome::Ok), static_cast<int>(rc));
-    // At least 2 publishes: 1 event + ≥1 snapshot chunk
-    TEST_ASSERT_TRUE(transport.publishes().size() >= 2u);
+    // At least 3 publishes: 1 event + 1 manifest + ≥1 snapshot chunk
+    TEST_ASSERT_TRUE(transport.publishes().size() >= 3u);
 
-    bool has_snapshot_topic = false;
+    const std::string base = "wildlife/test-device/snapshot/snap-001";
+    bool has_manifest = false;
+    bool has_chunk = false;
+    bool has_sha256 = false;
     for (const auto& p : transport.publishes()) {
-        if (p.topic == "wildlife/test-device/snapshot")
-            has_snapshot_topic = true;
+        if (p.topic == base + "/manifest") {
+            has_manifest = true;
+            const std::string body(p.payload.begin(), p.payload.end());
+            // Manifest must carry the snapshot_id and a sha256 field so
+            // subscribers can verify the reassembled JPEG.
+            TEST_ASSERT_TRUE(body.find("snap-001") != std::string::npos);
+            TEST_ASSERT_TRUE(body.find("sha256") != std::string::npos);
+            has_sha256 = body.find("sha256") != std::string::npos;
+        } else if (p.topic.rfind(base + "/", 0) == 0 && p.topic != base + "/manifest") {
+            // Per-chunk topic: <base>/<seq>/<total>
+            has_chunk = true;
+        }
     }
-    TEST_ASSERT_TRUE(has_snapshot_topic);
+    TEST_ASSERT_TRUE(has_manifest);
+    TEST_ASSERT_TRUE(has_chunk);
+    TEST_ASSERT_TRUE(has_sha256);
+}
+
+void test_snapshot_transport_failure_propagates() {
+    FakeTransport transport;
+    RecordingLogger logger;
+    auto pub = make_publisher(transport, logger);
+
+    JpegBuffer jpeg;
+    jpeg.data = std::vector<uint8_t>(512, 0xAA);
+
+    // Fail every publish after the first (event topic succeeds, manifest fails).
+    transport.fail_after_n_publishes(1);
+
+    const auto rc = pub.publish(make_event(1000), "deer", std::make_optional(jpeg));
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(PublishOutcome::TransportError), static_cast<int>(rc));
 }
 
 void test_empty_snapshot_not_published() {
@@ -124,9 +154,9 @@ void test_empty_snapshot_not_published() {
 
     pub.publish(make_event(1000), "cat", std::make_optional(empty_jpeg));
 
-    // Only the event topic, no snapshot topic
+    // Only the event topic, no snapshot subtree
     for (const auto& p : transport.publishes()) {
-        TEST_ASSERT_FALSE(p.topic == "wildlife/test-device/snapshot");
+        TEST_ASSERT_FALSE(p.topic.rfind("wildlife/test-device/snapshot", 0) == 0);
     }
 }
 
@@ -198,6 +228,7 @@ int main() {
     RUN_TEST(test_debounce_suppresses_second_event_in_window);
     RUN_TEST(test_debounce_allows_event_after_window);
     RUN_TEST(test_snapshot_is_published_when_provided);
+    RUN_TEST(test_snapshot_transport_failure_propagates);
     RUN_TEST(test_empty_snapshot_not_published);
     RUN_TEST(test_publish_transport_failure_returns_transport_error);
     RUN_TEST(test_no_detections_event_still_publishes);

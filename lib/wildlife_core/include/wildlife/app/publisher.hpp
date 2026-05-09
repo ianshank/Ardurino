@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // Wildlife Core — Publisher
 // Composes EventDebouncer → EventSerializer → SnapshotChunker → ITransport.
@@ -92,7 +92,9 @@ PublishOutcome Publisher::publish_with_labels(const DetectionEvent& event, Label
     }
 
     if (snapshot.has_value() && !snapshot->data.empty()) {
-        publish_chunks(*snapshot, event.snapshot_id);
+        if (!publish_chunks(*snapshot, event.snapshot_id)) {
+            return PublishOutcome::TransportError;
+        }
     }
 
     return PublishOutcome::Ok;

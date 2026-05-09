@@ -1,4 +1,4 @@
-#include "wildlife/app/publisher.hpp"
+﻿#include "wildlife/app/publisher.hpp"
 
 #include "wildlife/core/units.hpp"
 
@@ -40,7 +40,9 @@ PublishOutcome Publisher::publish(const DetectionEvent& event, const std::string
     }
 
     if (snapshot.has_value() && !snapshot->data.empty()) {
-        publish_chunks(*snapshot, event.snapshot_id);
+        if (!publish_chunks(*snapshot, event.snapshot_id)) {
+            return PublishOutcome::TransportError;
+        }
     }
 
     return PublishOutcome::Ok;
@@ -71,9 +73,44 @@ bool Publisher::publish_chunks(const JpegBuffer& jpeg, const std::string& snapsh
         return false;
     }
 
-    const std::string topic = _mqtt_cfg.base_topic + "/" + _device_id + "/snapshot";
+    // Topic layout encodes correlation/reassembly metadata so subscribers can
+    // group multi-chunk JPEGs without parsing the binary payload:
+    //   <base>/<device>/snapshot/<snapshot_id>/manifest        (JSON: total, sha256_hex)
+    //   <base>/<device>/snapshot/<snapshot_id>/<seq>/<total>   (binary chunk)
+    const std::string base_topic =
+        _mqtt_cfg.base_topic + "/" + _device_id + "/snapshot/" + snapshot_id;
+
+    // Publish manifest first so consumers can pre-allocate / dedupe before
+    // chunks start streaming. seq==0 carries the SHA-256 of the full JPEG.
+    {
+        const std::string manifest_topic = base_topic + "/manifest";
+        char manifest[160];
+        const int n = std::snprintf(
+            manifest, sizeof(manifest), "{\"snapshot_id\":\"%s\",\"total\":%u,\"sha256\":\"%s\"}",
+            snapshot_id.c_str(), chunks.front().total, chunks.front().sha256_hex.c_str());
+        if (n > 0) {
+            const auto* payload = reinterpret_cast<const uint8_t*>(manifest);
+            const bool ok =
+                _transport->publish(manifest_topic, payload, static_cast<std::size_t>(n),
+                                    _mqtt_cfg.qos, _mqtt_cfg.retain);
+            if (!ok) {
+                if (_log) {
+                    char buf[160];
+                    std::snprintf(buf, sizeof(buf),
+                                  "Publisher: snapshot manifest publish failed (topic=%s)",
+                                  manifest_topic.c_str());
+                    _log->warn(buf);
+                }
+                return false;
+            }
+        }
+    }
+
     bool all_ok = true;
     for (const auto& chunk : chunks) {
+        char suffix[32];
+        std::snprintf(suffix, sizeof(suffix), "/%u/%u", chunk.seq, chunk.total);
+        const std::string topic = base_topic + suffix;
         const bool ok = _transport->publish(topic, chunk.data.data(), chunk.data.size(),
                                             _mqtt_cfg.qos, _mqtt_cfg.retain);
         if (!ok) {
@@ -89,9 +126,9 @@ bool Publisher::publish_chunks(const JpegBuffer& jpeg, const std::string& snapsh
     }
 
     if (_log && all_ok) {
-        char buf[80];
-        std::snprintf(buf, sizeof(buf), "Publisher: snapshot sent (%zu chunks, %zu bytes)",
-                      chunks.size(), jpeg.data.size());
+        char buf[96];
+        std::snprintf(buf, sizeof(buf), "Publisher: snapshot %s sent (%zu chunks, %zu bytes)",
+                      snapshot_id.c_str(), chunks.size(), jpeg.data.size());
         _log->debug(buf);
     }
     return all_ok;
