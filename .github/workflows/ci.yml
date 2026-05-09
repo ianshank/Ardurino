@@ -56,6 +56,7 @@ jobs:
         env:
           - xiao_esp32s3_sense
           - xiao_esp32s3_sense_dev
+          - xiao_esp32s3_camera_web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -63,6 +64,14 @@ jobs:
           python-version: "3.12"
       - run: pip install "platformio==${PLATFORMIO_VERSION}"
       - name: Compile target firmware
+        env:
+          # The camera_web env requires runtime credentials at build time
+          # (see tools/camera_web_env.py). Inject CI-only placeholders so the
+          # build-time #error guard in src/camera_web_server/main.cpp is
+          # satisfied. Real deployments inject these via the build environment.
+          CAMERA_WIFI_SSID: ci-build-only
+          CAMERA_WIFI_PASSWORD: ci-build-only-password
+          CAMERA_FALLBACK_AP_PASS: ci-build-only-password
         run: pio run -e ${{ matrix.env }}
       - name: Static analysis
         run: pio check -e ${{ matrix.env }} --severity=medium --fail-on-defect=medium
