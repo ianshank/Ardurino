@@ -1,10 +1,9 @@
-# ruff: noqa: F821
 # Wires Core sources into the native (host) test build.
 # PlatformIO native env does not auto-discover project libs the same way
 # as embedded envs, so we add wildlife_core/src explicitly via SCons.
 #
-# Import() and env are SCons/PlatformIO globals injected at runtime —
-# F821 (undefined name) is suppressed project-wide via the pragma above.
+# Import() and env are SCons/PlatformIO globals injected at runtime;
+# ruff F821 is suppressed only on the lines that reference them.
 
 import os
 
