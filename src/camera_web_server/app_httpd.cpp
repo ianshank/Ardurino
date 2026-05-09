@@ -206,6 +206,7 @@ static void proxyCallback(const char* resp, size_t len) {
     PtrBuffer::Slot* p_slot = (PtrBuffer::Slot*)malloc(sizeof(PtrBuffer::Slot));
     if (p_slot == NULL) {
         log_e("Failed to allocate slot...");
+        free(copy);
         return;
     }
 
@@ -384,6 +385,15 @@ static esp_err_t results_handler(httpd_req_t* req) {
         copied += size;
         size = ((const char*)slot->data + slot->size) - img_tail;
         strncpy(rst_buf + copied, img_tail, size);
+    } else {
+        // No image payload to strip — forward the slot data verbatim.
+        if (slot->size >= RST_BUFFER_SIZE) {
+            log_e("Results buffer is not enough...");
+            httpd_resp_send_500(req);
+            return ESP_OK;
+        }
+        memset(rst_buf, 0, RST_BUFFER_SIZE);
+        memcpy(rst_buf, slot->data, slot->size);
     }
 
     httpd_resp_set_type(req, "application/json");

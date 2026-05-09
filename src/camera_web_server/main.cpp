@@ -14,14 +14,23 @@
 #define CAMERA_WIFI_PASSWORD ""
 #endif
 
+#ifndef CAMERA_FALLBACK_AP_SSID
+#define CAMERA_FALLBACK_AP_SSID "WSPOT-Camera"
+#endif
+
+#ifndef CAMERA_FALLBACK_AP_PASS
+// WPA2 minimum length is 8 chars; an empty value yields an open AP.
+#define CAMERA_FALLBACK_AP_PASS "wspot-camera"
+#endif
+
 // SSCMA AI instance is defined in app_httpd.cpp
 extern SSCMA AI;
 
 namespace {
 
-constexpr char kFallbackApSsid[] = "WSPOT-Camera";
-constexpr char kFallbackApPassword[] = "wspot-camera";
-constexpr uint32_t kWifiConnectTimeoutMs = 20000;
+constexpr char     kFallbackApSsid[]       = CAMERA_FALLBACK_AP_SSID;
+constexpr char     kFallbackApPassword[]   = CAMERA_FALLBACK_AP_PASS;
+constexpr uint32_t kWifiConnectTimeoutMs   = 20000;
 
 // ---------------------------------------------------------------------------
 // Grove Vision AI V2 initialization handshake
@@ -147,8 +156,9 @@ void start_fallback_ap() {
 
     Serial.print("Fallback AP SSID: ");
     Serial.println(kFallbackApSsid);
-    Serial.print("Fallback AP password: ");
-    Serial.println(kFallbackApPassword);
+    // Never log the AP password to the serial console — operators can read
+    // it from the build configuration / provisioning channel.
+    Serial.println("Fallback AP password: <redacted>");
 }
 
 } // namespace
