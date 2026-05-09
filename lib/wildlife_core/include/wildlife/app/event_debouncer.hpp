@@ -12,7 +12,9 @@ namespace app {
 
 struct DebouncerConfig {
     uint32_t debounce_ms = 5000;
-    // If empty, all class IDs are permitted.
+    // Allow-list of resolved label strings (e.g. "dog", "cat"). The debouncer
+    // matches the label produced by the caller's resolver, NOT the raw class_id.
+    // If empty, all labels are permitted.
     std::vector<std::string> classes_of_interest;
 };
 
