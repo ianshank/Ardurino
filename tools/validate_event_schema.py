@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: F821
 """validate_event_schema.py — validate a detection event JSON string/file against event.v1.schema.json.
 
 Usage:
@@ -22,8 +21,14 @@ SCHEMA_PATH = pathlib.Path(__file__).parent.parent / "data" / "event.v1.schema.j
 
 
 def load_schema() -> dict:
-    with SCHEMA_PATH.open(encoding="utf-8") as fh:
-        return json.load(fh)
+    # utf-8-sig tolerates an accidental BOM in the schema file without
+    # failing the whole pipeline.
+    try:
+        with SCHEMA_PATH.open(encoding="utf-8-sig") as fh:
+            return json.load(fh)
+    except FileNotFoundError:
+        print(f"Schema file not found: {SCHEMA_PATH}", file=sys.stderr)
+        sys.exit(2)
 
 
 def parse_input(args: list[str]) -> str:
@@ -35,8 +40,12 @@ def parse_input(args: list[str]) -> str:
         return sys.stdin.read()
 
     candidate = pathlib.Path(args[0])
-    if candidate.exists():
-        return candidate.read_text(encoding="utf-8")
+    if candidate.is_file():
+        try:
+            return candidate.read_text(encoding="utf-8-sig")
+        except OSError as exc:
+            print(f"Could not read file '{candidate}': {exc}", file=sys.stderr)
+            sys.exit(2)
 
     # Treat as a raw JSON string
     return args[0]
