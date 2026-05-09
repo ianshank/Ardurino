@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 // Wildlife Core — Typed enums for RuntimeConfig categorical fields.
 // Every mode/transport/source string is mapped here; the string table lives

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 // Wildlife Core — Publisher
 // Composes EventDebouncer → EventSerializer → SnapshotChunker → ITransport.

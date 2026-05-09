@@ -1,4 +1,4 @@
-﻿#include "../test_util/fake_clock.hpp"
+#include "../test_util/fake_clock.hpp"
 #include "../test_util/fake_transport.hpp"
 #include "../test_util/recording_logger.hpp"
 #include "wildlife/app/event_debouncer.hpp"

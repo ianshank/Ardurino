@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 // Wildlife Core — Application state machine.
 // Pure function: no I/O, no allocations on hot path, deterministic.

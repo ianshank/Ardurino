@@ -1,4 +1,4 @@
-﻿#include "wildlife/app/publisher.hpp"
+#include "wildlife/app/publisher.hpp"
 
 #include "wildlife/core/units.hpp"
 

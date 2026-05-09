@@ -1,4 +1,4 @@
-﻿#include "wildlife/app/app_state_machine.hpp"
+#include "wildlife/app/app_state_machine.hpp"
 
 namespace wildlife {
 namespace app {

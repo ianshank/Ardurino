@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 // Wildlife Core — Mutable runtime configuration.
 // Loaded from LittleFS (/config.json), provisioned via captive portal.
