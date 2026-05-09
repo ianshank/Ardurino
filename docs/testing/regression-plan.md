@@ -79,7 +79,7 @@ Run end-to-end after touching anything in `wildlife_adapters/`, `src/`,
 ## 6. Schema validation
 
 ```powershell
-python tools/validate_event_schema.py data/event.v1.schema.json
+python tools/validate_event_schema.py data/event.v1.example.json
 ```
 
 Should be run whenever `event_serializer.cpp` or the schema changes.

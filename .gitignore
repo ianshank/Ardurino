@@ -40,6 +40,7 @@ test_*_latest.txt
 test_out.txt
 test_inf_out.txt
 final_test.txt
+ci_*.log
 stream1_*.txt
 stream1_*.ps1
 patch_s1*.py
@@ -57,3 +58,7 @@ secrets.h
 config.local.json
 .env
 .env.local
+
+# VS Code per-developer/auto-generated files
+.vscode/c_cpp_properties.json
+.vscode/launch.json

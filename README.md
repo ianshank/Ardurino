@@ -77,7 +77,7 @@ docs/
 ### Prerequisites
 
 - Python 3.12+
-- [PlatformIO Core](https://docs.platformio.org/) 6.7+
+- [PlatformIO Core](https://docs.platformio.org/) ≥ 6.1.15 (CI-pinned; 6.7+ supported locally)
 - (Optional) `clang-format` 18+, `ruff`, `gcovr`
 
 ### Build &amp; flash
