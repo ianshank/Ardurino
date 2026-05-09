@@ -1,0 +1,122 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wildlife-device/schemas/event.v1.json",
+  "title": "DetectionEvent",
+  "description": "Schema for wildlife detection events published over MQTT (schema: detection.v1).",
+  "type": "object",
+  "required": ["schema", "event_ts_ms", "meta", "detections"],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "detection.v1",
+      "description": "Schema version tag. Must be 'detection.v1'."
+    },
+    "event_ts_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Event wall-clock timestamp in milliseconds since boot."
+    },
+    "snapshot_id": {
+      "type": "string",
+      "description": "Identifier correlating this event with a JPEG snapshot chunk stream."
+    },
+    "meta": {
+      "$ref": "#/$defs/device_meta"
+    },
+    "detections": {
+      "type": "array",
+      "description": "List of bounding-box detections from the inference engine.",
+      "items": {
+        "$ref": "#/$defs/detection"
+      }
+    }
+  },
+  "$defs": {
+    "device_meta": {
+      "type": "object",
+      "required": ["device_id", "fw_version", "board_id", "rssi", "battery_mv"],
+      "additionalProperties": false,
+      "properties": {
+        "device_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique device identifier."
+        },
+        "fw_version": {
+          "type": "string",
+          "description": "Firmware version string."
+        },
+        "board_id": {
+          "type": "string",
+          "description": "Board hardware identifier."
+        },
+        "rssi": {
+          "type": "integer",
+          "description": "WiFi RSSI in dBm."
+        },
+        "battery_mv": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Battery voltage in millivolts."
+        }
+      }
+    },
+    "detection": {
+      "type": "object",
+      "required": ["class_id", "score", "bbox", "ts_ms"],
+      "additionalProperties": false,
+      "properties": {
+        "class_id": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Model class index."
+        },
+        "label": {
+          "type": "string",
+          "description": "Optional human-readable label resolved from class_id."
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Confidence score 0-100."
+        },
+        "bbox": {
+          "$ref": "#/$defs/bbox"
+        },
+        "ts_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Detection timestamp in milliseconds since boot."
+        }
+      }
+    },
+    "bbox": {
+      "type": "object",
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Bounding box left edge in pixels."
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Bounding box top edge in pixels."
+        },
+        "w": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Bounding box width in pixels."
+        },
+        "h": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Bounding box height in pixels."
+        }
+      }
+    }
+  }
+}

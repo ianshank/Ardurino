@@ -1,0 +1,12 @@
+{
+  "name": "wildlife_core",
+  "version": "0.1.0",
+  "description": "Core logic for Wildlife Spotter — pure C++17, no Arduino dependencies.",
+  "keywords": ["wildlife", "core"],
+  "frameworks": "*",
+  "platforms": "*",
+  "build": {
+    "srcDir": "src",
+    "includeDir": "include"
+  }
+}

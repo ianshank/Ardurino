@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+include = ["tools/*.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "E501",   # line too long — enforced by line-length above
+]
+
+# PlatformIO scripts receive `Import` and `env` from the SCons runtime;
+# they are not lexically defined in the file but are guaranteed at exec time.
+[tool.ruff.lint.per-file-ignores]
+"tools/camera_web_env.py" = ["F821"]
+"tools/pio_native_pre.py" = ["F821"]

@@ -1,0 +1,40 @@
+//
+// !!! WARNING !!! AUTO-GENERATED FILE!
+// PLEASE DO NOT MODIFY IT AND USE "platformio.ini":
+// https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags
+//
+{
+    "configurations": [
+        {
+            "name": "PlatformIO",
+            "includePath": [
+                "C:/Users/iansh/OneDrive/Documents/Ardurino/src",
+                "C:/Users/iansh/OneDrive/Documents/Ardurino/lib/wildlife_core/src",
+                "C:/Users/iansh/OneDrive/Documents/Ardurino/lib/wildlife_core/include",
+                ""
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "C:/Users/iansh/OneDrive/Documents/Ardurino/src",
+                    "C:/Users/iansh/OneDrive/Documents/Ardurino/lib/wildlife_core/src",
+                    "C:/Users/iansh/OneDrive/Documents/Ardurino/lib/wildlife_core/include",
+                    ""
+                ]
+            },
+            "defines": [
+                "PLATFORMIO=60119",
+                "WILDLIFE_FW_VERSION=\"0.1.0\"",
+                "WILDLIFE_HOST_BUILD=1",
+                "__PLATFORMIO_BUILD_DEBUG__",
+                ""
+            ],
+            "cppStandard": "gnu++17",
+            "compilerPath": "C:/Users/iansh/AppData/Local/Microsoft/WinGet/Packages/BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe/mingw64/bin/gcc.exe",
+            "compilerArgs": [
+                ""
+            ]
+        }
+    ],
+    "version": 4
+}

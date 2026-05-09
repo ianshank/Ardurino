@@ -1,0 +1,18 @@
+{
+    // Use PlatformIO as the IntelliSense configuration provider
+    // This tells the C/C++ extension to read include paths and defines
+    // from PlatformIO's build system instead of guessing.
+    "C_Cpp.default.configurationProvider": "platformio.platformio-ide",
+
+    // Ensure the correct configuration name is selected
+    "C_Cpp.default.intelliSenseMode": "gcc-x64",
+
+    // Disable Arduino extension's IntelliSense (it conflicts with PIO)
+    "arduino.useArduinoCli": true,
+
+    // Hide noisy PIO files from explorer
+    "files.exclude": {
+        "**/.pio": true,
+        "**/.venv": true
+    }
+}
