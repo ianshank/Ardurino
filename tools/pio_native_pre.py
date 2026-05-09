@@ -2,8 +2,9 @@
 # PlatformIO native env does not auto-discover project libs the same way
 # as embedded envs, so we add wildlife_core/src explicitly via SCons.
 #
-# Import() and env are SCons/PlatformIO globals injected at runtime;
-# ruff F821 is suppressed only on the lines that reference them.
+# Import() and env are SCons/PlatformIO globals injected at runtime; F821
+# is silenced for this file via [tool.ruff.lint.per-file-ignores] in
+# pyproject.toml so individual references do not need per-line markers.
 
 import os
 

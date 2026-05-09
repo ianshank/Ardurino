@@ -3,8 +3,10 @@
 
 [CmdletBinding()]
 param(
-    [int]$FailUnderLine   = 85,
-    [int]$FailUnderBranch = 70
+    # Defaults mirror CI thresholds in .github/workflows/ci.yml
+    # (COVERAGE_LINE_THRESHOLD / COVERAGE_BRANCH_THRESHOLD). Override via -FailUnderLine / -FailUnderBranch.
+    [int]$FailUnderLine   = $(if ($env:COVERAGE_LINE_THRESHOLD)   { [int]$env:COVERAGE_LINE_THRESHOLD }   else { 84 }),
+    [int]$FailUnderBranch = $(if ($env:COVERAGE_BRANCH_THRESHOLD) { [int]$env:COVERAGE_BRANCH_THRESHOLD } else { 67 })
 )
 
 $ErrorActionPreference = 'Stop'
