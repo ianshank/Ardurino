@@ -1,0 +1,21 @@
+{
+  "schema": "detection.v1",
+  "event_ts_ms": 1736544000000,
+  "snapshot_id": "snap-0001",
+  "meta": {
+    "device_id": "wspot-dev-0001",
+    "fw_version": "0.1.0",
+    "board_id": "xiao_esp32s3_sense",
+    "rssi": -55,
+    "battery_mv": 3950
+  },
+  "detections": [
+    {
+      "class_id": 1,
+      "label": "deer",
+      "score": 87,
+      "bbox": { "x": 120, "y": 80, "w": 200, "h": 240 },
+      "ts_ms": 1736544000000
+    }
+  ]
+}
