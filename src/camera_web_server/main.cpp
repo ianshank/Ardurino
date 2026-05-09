@@ -18,9 +18,19 @@
 #define CAMERA_FALLBACK_AP_SSID "WSPOT-Camera"
 #endif
 
-#ifndef CAMERA_FALLBACK_AP_PASS
-// WPA2 minimum length is 8 chars; an empty value yields an open AP.
-#define CAMERA_FALLBACK_AP_PASS "wspot-camera"
+// CAMERA_FALLBACK_AP_PASS controls the Wi-Fi password of the soft-AP started
+// when STA join fails. The build deliberately ships NO default value:
+//   * Production builds MUST inject a strong, per-deployment value via
+//     tools/camera_web_env.py (env var CAMERA_FALLBACK_AP_PASS).
+//   * Dev builds may opt-in to an open AP by defining
+//     CAMERA_FALLBACK_AP_OPEN=1 (no password). This is logged loudly.
+// Anything else is a hard compile error so we cannot silently ship a
+// well-known credential.
+#if !defined(CAMERA_FALLBACK_AP_PASS) && !defined(CAMERA_FALLBACK_AP_OPEN)
+#error "Define CAMERA_FALLBACK_AP_PASS (>=8 chars) at build time, or set CAMERA_FALLBACK_AP_OPEN=1 for an explicitly open dev AP."
+#endif
+#if defined(CAMERA_FALLBACK_AP_OPEN) && !defined(CAMERA_FALLBACK_AP_PASS)
+#define CAMERA_FALLBACK_AP_PASS ""
 #endif
 
 // SSCMA AI instance is defined in app_httpd.cpp
@@ -156,9 +166,13 @@ void start_fallback_ap() {
 
     Serial.print("Fallback AP SSID: ");
     Serial.println(kFallbackApSsid);
+#if defined(CAMERA_FALLBACK_AP_OPEN)
+    Serial.println("Fallback AP password: <OPEN — dev build, no auth>");
+#else
     // Never log the AP password to the serial console — operators can read
     // it from the build configuration / provisioning channel.
     Serial.println("Fallback AP password: <redacted>");
+#endif
 }
 
 } // namespace
