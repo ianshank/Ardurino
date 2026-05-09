@@ -27,9 +27,17 @@ bool LittleFsConfigStore::read(const std::string& path, std::string& out) noexce
         return false;
     }
 
-    out.reserve(static_cast<std::size_t>(file.size()));
-    while (file.available()) {
-        out.push_back(static_cast<char>(file.read()));
+    const std::size_t size = static_cast<std::size_t>(file.size());
+    out.resize(size);
+    if (size > 0) {
+        const std::size_t read = file.read(reinterpret_cast<uint8_t*>(&out[0]), size);
+        if (read != size) {
+            // Short read — surface the partial payload to the caller and let
+            // them decide. We still return false to flag the inconsistency.
+            out.resize(read);
+            file.close();
+            return false;
+        }
     }
     file.close();
     return true;
