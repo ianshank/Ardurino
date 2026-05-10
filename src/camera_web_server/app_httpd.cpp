@@ -338,8 +338,14 @@ static void start_fake_frame_pump() {
     if (started) {
         return;
     }
+    const BaseType_t result =
+        xTaskCreate(fake_frame_pump_task, "fake_jpeg_pump", 8192, NULL, 1, NULL);
+    if (result != pdPASS) {
+        log_e("Failed to start fake JPEG pump task (xTaskCreate=%d)",
+              static_cast<int>(result));
+        return;
+    }
     started = true;
-    xTaskCreate(fake_frame_pump_task, "fake_jpeg_pump", 8192, NULL, 1, NULL);
 }
 #endif
 
@@ -960,12 +966,18 @@ static esp_err_t status_handler(httpd_req_t* req) {
     xSemaphoreGive(SI.mutex);
 
     const uint64_t uptime = now_ms();
-    uint64_t       age    = 0;
+    // last_frame_timestamp is encoded from xTaskGetTickCount() (see
+    // proxyCallback / initStatInfo). esp_timer_get_time() and the FreeRTOS
+    // tick clock share monotonicity but not origin, so compute age against a
+    // tick-based "now" to avoid skew.
+    const uint64_t frame_clock_now_ms =
+        static_cast<uint64_t>(xTaskGetTickCount()) * portTICK_PERIOD_MS;
+    uint64_t age = 0;
     if (last_frame_id != 0) {
         const uint64_t frame_ms =
             static_cast<uint64_t>(last_frame_timestamp.tv_sec) * 1000 +
             static_cast<uint64_t>(last_frame_timestamp.tv_usec) / 1000;
-        age = uptime >= frame_ms ? uptime - frame_ms : 0;
+        age = frame_clock_now_ms >= frame_ms ? frame_clock_now_ms - frame_ms : 0;
     }
 
 #if defined(WILDLIFE_FAKE_JPEG)
@@ -1026,13 +1038,16 @@ void startCameraServer() {
 #endif
     };
 
+    // /api/status is a plain JSON GET endpoint, not a WebSocket. Setting
+    // is_websocket=true here would make the ESP-IDF httpd reject ordinary
+    // HTTP requests with 400 if CONFIG_HTTPD_WS_SUPPORT is ever enabled.
     httpd_uri_t status_uri = {.uri      = "/api/status",
                               .method   = HTTP_GET,
                               .handler  = status_handler,
                               .user_ctx = NULL
 #ifdef CONFIG_HTTPD_WS_SUPPORT
                               ,
-                              .is_websocket             = true,
+                              .is_websocket             = false,
                               .handle_ws_control_frames = false,
                               .supported_subprotocol    = NULL
 #endif
@@ -1080,7 +1095,16 @@ void startCameraServer() {
     if (httpd_start(&web_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(web_httpd, &index_uri);
         httpd_register_uri_handler(web_httpd, &result_uri);
+#if defined(WILDLIFE_FAKE_JPEG)
+        // Grove proxy is not initialized in fake mode (no I2C transport bound
+        // to the global SSCMA AI). command_handler unconditionally calls
+        // AI.write(), which would dereference an uninitialized transport.
+        // Skip the route entirely so the httpd returns 404 rather than UB.
+        (void)command_uri;
+        log_w("WILDLIFE_FAKE_JPEG: /command disabled (Grove proxy not initialized)");
+#else
         httpd_register_uri_handler(web_httpd, &command_uri);
+#endif
         httpd_register_uri_handler(web_httpd, &status_uri);
     }
 

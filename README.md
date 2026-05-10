@@ -46,12 +46,12 @@ flowchart LR
 
 ## Hardware
 
-| Component                | Notes                                             |
-|--------------------------|---------------------------------------------------|
-| Seeed XIAO ESP32S3 Sense | ESP32-S3, PSRAM, OPI flash, USB-CDC               |
-| Seeed Grove Vision AI V2 | Himax HX6538, on-sensor TinyML, USB-CDC + I²C     |
-| I²C wiring               | XIAO `SDA` / `SCL` → Grove `SDA` / `SCL`, common GND |
-| Power                    | Battery + solar (LiPo) or 5 V USB                 |
+| Component                | Notes                                                        |
+|--------------------------|--------------------------------------------------------------|
+| Seeed XIAO ESP32S3 Sense | ESP32-S3, PSRAM, OPI flash, USB-CDC                          |
+| Seeed Grove Vision AI V2 | Himax HX6538, on-sensor TinyML, USB-CDC + I²C                |
+| I²C wiring               | XIAO `SDA` / `SCL` → Grove `SDA` / `SCL`, common GND         |
+| Power                    | Battery + solar (LiPo) or 5 V USB                            |
 
 ## Repository layout
 
@@ -60,7 +60,7 @@ src/                          composition root (Arduino)
   camera_web_server/          Seeed camera-web-server adaptation
 lib/wildlife_core/            pure C++ logic, host-buildable, no Arduino deps
 lib/wildlife_adapters/        Arduino/ESP-specific shims
-test/native/                  Unity host tests (171 cases / 15 suites)
+test/native/                  Unity host tests (172 cases / 15 suites)
 data/                         LittleFS image: config + labels
 partitions/                   ESP32 partition tables (dual-OTA + dev)
 tools/                        coverage runner, helper scripts, flash verifier
@@ -152,14 +152,14 @@ Full regression checklist (CI + hardware-in-the-loop):
 
 ## Troubleshooting
 
-| Symptom                                          | Likely cause                                                                 |
-|--------------------------------------------------|------------------------------------------------------------------------------|
-| `AT+MODELS?` returns `size: 0`                   | Descriptor-only flash. Re-flash following the Grove runbook.                 |
-| `:8080/stream/frame` times out                   | No model loaded → SSCMA never raises an INVOKE. Fix `MODELS?` first.         |
-| Need HTTP stream smoke without Grove hardware     | Build `xiao_esp32s3_camera_web_fake`; test direct `/stream/frame` only.      |
-| XIAO not on expected IP                          | DHCP rotation; sweep LAN by MAC `e0:72:a1:f8:77:9c` (see smoke-test runbook).|
-| `pio test -e native` link errors                 | Stale `.pio/build/native`. Run `pio run --target clean -e native` and retry. |
-| `xiao_esp32s3_camera_web` build pulls Eigen into other envs | `lib_deps` leak. Verify `lib_deps` is scoped to that env only.   |
+| Symptom                                                             | Likely cause                                                                  |
+|---------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| `AT+MODELS?` returns `size: 0`                                      | Descriptor-only flash. Re-flash following the Grove runbook.                  |
+| `:8080/stream/frame` times out                                      | No model loaded → SSCMA never raises an INVOKE. Fix `MODELS?` first.          |
+| Need HTTP stream smoke without Grove hardware                       | Build `xiao_esp32s3_camera_web_fake`; test direct `/stream/frame` only.       |
+| XIAO not on expected IP                                             | DHCP rotation; sweep LAN by MAC `e0:72:a1:f8:77:9c` (see smoke-test runbook). |
+| `pio test -e native` link errors                                    | Stale `.pio/build/native`. Run `pio run --target clean -e native` and retry.  |
+| `xiao_esp32s3_camera_web` build pulls Eigen into other envs         | `lib_deps` leak. Verify `lib_deps` is scoped to that env only.                |
 
 ## Roadmap / next steps
 

@@ -48,12 +48,12 @@ pwsh tools/coverage.ps1
 
 ## 4. Embedded build smoke (CI)
 
-| ID    | Env                          | Command                                 |
-|-------|------------------------------|-----------------------------------------|
-| B-01  | `xiao_esp32s3_sense`         | `pio run -e xiao_esp32s3_sense`         |
-| B-02  | `xiao_esp32s3_sense_dev`     | `pio run -e xiao_esp32s3_sense_dev`     |
-| B-03  | `xiao_esp32s3_camera_web`    | `pio run -e xiao_esp32s3_camera_web`    |
-| B-04  | `xiao_esp32s3_camera_web_fake` | `pio run -e xiao_esp32s3_camera_web_fake` |
+| ID   | Env                              | Command                                      |
+|------|----------------------------------|----------------------------------------------|
+| B-01 | `xiao_esp32s3_sense`             | `pio run -e xiao_esp32s3_sense`              |
+| B-02 | `xiao_esp32s3_sense_dev`         | `pio run -e xiao_esp32s3_sense_dev`          |
+| B-03 | `xiao_esp32s3_camera_web`        | `pio run -e xiao_esp32s3_camera_web`         |
+| B-04 | `xiao_esp32s3_camera_web_fake`   | `pio run -e xiao_esp32s3_camera_web_fake`    |
 
 Failure modes to watch for:
 
@@ -65,18 +65,18 @@ Failure modes to watch for:
 Run end-to-end after touching anything in `wildlife_adapters/`, `src/`,
 `tools/camera_web_env.py`, or partition tables. Record results in the PR.
 
-| ID    | Step                                                            | Pass criterion                                |
-|-------|-----------------------------------------------------------------|-----------------------------------------------|
-| H-01  | Flash XIAO: `pio run -e xiao_esp32s3_sense -t upload`           | Upload OK, device reboots                     |
-| H-02  | Wi-Fi join (captive portal or stored creds)                     | Device gets DHCP lease, MAC visible on AP     |
-| H-03  | `GET http://<xiao-ip>/` (web UI)                                | 200 OK, body > 0 bytes                        |
-| H-04  | AT proxy: `AT+ID?` to Grove via XIAO                            | Returns non-zero hex ID                       |
-| H-05  | AT proxy: `AT+MODELS?`                                          | `size > 0` for at least one model entry       |
-| H-06  | Production `GET :8080/stream/frame` after web UI Start          | Body starts with `FF D8` (JPEG SOI)           |
-| H-07  | `GET :8080/stream/result`                                       | Valid SSCMA result JSON                       |
-| H-08  | MQTT broker tap (`mosquitto_sub`)                               | At least one event published end-to-end       |
-| H-09  | `python tools/grove_flash_check.py COM<n>`                      | Exit code 0 (`size > 0`)                      |
-| H-10  | Fake env direct MJPEG smoke: `tools/check_grove_streaming.ps1 -Host <ip>` | ≥ 3 JPEG frames in 3 s, no Grove required |
+| ID   | Step                                                   | Pass criterion                                                                  |
+|------|--------------------------------------------------------|---------------------------------------------------------------------------------|
+| H-01 | Flash XIAO: `pio run -e xiao_esp32s3_sense -t upload`  | Upload OK, device reboots                                                       |
+| H-02 | Wi-Fi join (captive portal or stored creds)            | Device gets DHCP lease, MAC visible on AP                                       |
+| H-03 | `GET http://<xiao-ip>/` (web UI)                       | 200 OK, body > 0 bytes                                                          |
+| H-04 | AT proxy: `AT+ID?` to Grove via XIAO                   | Returns non-zero hex ID                                                         |
+| H-05 | AT proxy: `AT+MODELS?`                                 | `size > 0` for at least one model entry                                         |
+| H-06 | Production `GET :8080/stream/frame` after web UI Start | Body starts with `FF D8` (JPEG SOI)                                             |
+| H-07 | `GET :8080/stream/result`                              | Valid SSCMA result JSON                                                         |
+| H-08 | MQTT broker tap (`mosquitto_sub`)                      | At least one event published end-to-end                                         |
+| H-09 | `python tools/grove_flash_check.py COM<n>`             | Exit code 0 (`size > 0`)                                                        |
+| H-10 | Fake env direct MJPEG smoke                            | Script sees ≥ 3 frames in 3 s; no Grove.                                      |
 
 ## 6. Schema validation
 
@@ -86,12 +86,20 @@ python tools/validate_event_schema.py data/event.v1.example.json
 
 Should be run whenever `event_serializer.cpp` or the schema changes.
 
-## 7. Known good baseline (this PR)
+## 7. Known good baseline
 
-- Static + lint: clean.
-- Native tests: **172 / 172** passing in ~29 s.
-- Embedded builds: not yet run in this PR (no firmware change since last
-  green). Re-run before any firmware-touching PR.
+CI re-asserts the host-side baseline on every PR; do not encode per-PR
+status in this document (it goes stale as soon as another PR lands). The
+baseline below describes the green-state shape — see the GitHub Actions
+run linked from the PR for the current numbers.
+
+- Static + lint: clean (`format`, `lint-python` jobs green).
+- Native tests: full Unity suite passing (`pio test -e native`, see the
+  `host-tests-and-coverage` job for the current case count).
+- Coverage gate: ≥ 84 % line, ≥ 67 % branch on `lib/wildlife_core/`.
+- Embedded builds: all four matrix envs (`xiao_esp32s3_sense`,
+  `xiao_esp32s3_sense_dev`, `xiao_esp32s3_camera_web`,
+  `xiao_esp32s3_camera_web_fake`) compile + pass `pio check`.
 - Hardware: H-01..H-04 and H-06..H-08 verified on bench; **H-05 currently
   fails** (`MODELS? size: 0`) — see
   [../runbooks/grove-model-flash-pc.md](../runbooks/grove-model-flash-pc.md).
