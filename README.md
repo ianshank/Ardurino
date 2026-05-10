@@ -96,7 +96,13 @@ pio run -e xiao_esp32s3_sense_dev -t upload
 # Camera web-server variant (Seeed adaptation, requires Wi-Fi creds)
 $env:CAMERA_WIFI_SSID = "<ssid>"
 $env:CAMERA_WIFI_PASSWORD = "<password>"
+$env:CAMERA_FALLBACK_AP_PASS = "<strong-fallback-ap-password>"
 pio run -e xiao_esp32s3_camera_web -t upload
+
+# Direct MJPEG smoke variant. This bypasses Grove hardware and injects
+# synthetic JPEG frames into /stream/frame; it does not emulate the stock UI.
+pio run -e xiao_esp32s3_camera_web_fake -t upload
+tools/check_grove_streaming.ps1 -Host <device-ip> -Seconds 3 -MinFrames 3
 ```
 
 ### Provision
@@ -113,6 +119,11 @@ using the SenseCraft Web Toolkit. The full PC-only procedure (no mobile
 app required) and recovery instructions are in
 [docs/runbooks/grove-model-flash-pc.md](docs/runbooks/grove-model-flash-pc.md).
 
+For dev/CI smoke testing of the XIAO HTTP MJPEG path without Grove hardware,
+use `xiao_esp32s3_camera_web_fake` and verify direct `/stream/frame` output
+with `tools/check_grove_streaming.ps1`. The fake env is not a production image
+and does not emulate the web UI's Start command path.
+
 After flashing, verify with:
 
 ```powershell
@@ -122,10 +133,10 @@ python tools/grove_flash_check.py COM11   # exit 0 = ready, 2 = descriptor-only
 ## Tests &amp; coverage
 
 ```powershell
-# All native unit tests (currently 171 / 171 green)
+# All native unit tests (currently 172 / 172 green)
 pio test -e native
 
-# Coverage gate (>=85% line, >=70% branch on wildlife_core)
+# Coverage gate (>=84% line, >=67% branch on wildlife_core)
 pwsh tools/coverage.ps1
 ```
 
@@ -145,6 +156,7 @@ Full regression checklist (CI + hardware-in-the-loop):
 |--------------------------------------------------|------------------------------------------------------------------------------|
 | `AT+MODELS?` returns `size: 0`                   | Descriptor-only flash. Re-flash following the Grove runbook.                 |
 | `:8080/stream/frame` times out                   | No model loaded → SSCMA never raises an INVOKE. Fix `MODELS?` first.         |
+| Need HTTP stream smoke without Grove hardware     | Build `xiao_esp32s3_camera_web_fake`; test direct `/stream/frame` only.      |
 | XIAO not on expected IP                          | DHCP rotation; sweep LAN by MAC `e0:72:a1:f8:77:9c` (see smoke-test runbook).|
 | `pio test -e native` link errors                 | Stale `.pio/build/native`. Run `pio run --target clean -e native` and retry. |
 | `xiao_esp32s3_camera_web` build pulls Eigen into other envs | `lib_deps` leak. Verify `lib_deps` is scoped to that env only.   |

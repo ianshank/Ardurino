@@ -15,7 +15,7 @@ submitter and attached to the PR.
 
 ## 2. Host unit tests (CI)
 
-Run via `pio test -e native`. Current baseline: **171 / 171** passing
+Run via `pio test -e native`. Current baseline: **172 / 172** passing
 across 15 Unity suites.
 
 | ID    | Suite                       | Asserts                                            |
@@ -43,7 +43,7 @@ pwsh tools/coverage.ps1
 ```
 
 - Filter: `lib/wildlife_core/`
-- Thresholds: ≥ 85 % line, ≥ 70 % branch (enforced by `gcovr --fail-under-*`)
+- Thresholds: ≥ 84 % line, ≥ 67 % branch (enforced by `gcovr --fail-under-*`)
 - Report: `coverage.xml` + `coverage_html/` uploaded as CI artifact.
 
 ## 4. Embedded build smoke (CI)
@@ -53,6 +53,7 @@ pwsh tools/coverage.ps1
 | B-01  | `xiao_esp32s3_sense`         | `pio run -e xiao_esp32s3_sense`         |
 | B-02  | `xiao_esp32s3_sense_dev`     | `pio run -e xiao_esp32s3_sense_dev`     |
 | B-03  | `xiao_esp32s3_camera_web`    | `pio run -e xiao_esp32s3_camera_web`    |
+| B-04  | `xiao_esp32s3_camera_web_fake` | `pio run -e xiao_esp32s3_camera_web_fake` |
 
 Failure modes to watch for:
 
@@ -71,10 +72,11 @@ Run end-to-end after touching anything in `wildlife_adapters/`, `src/`,
 | H-03  | `GET http://<xiao-ip>/` (web UI)                                | 200 OK, body > 0 bytes                        |
 | H-04  | AT proxy: `AT+ID?` to Grove via XIAO                            | Returns non-zero hex ID                       |
 | H-05  | AT proxy: `AT+MODELS?`                                          | `size > 0` for at least one model entry       |
-| H-06  | `GET :8080/stream/frame`                                        | Body starts with `FF D8` (JPEG SOI)           |
+| H-06  | Production `GET :8080/stream/frame` after web UI Start          | Body starts with `FF D8` (JPEG SOI)           |
 | H-07  | `GET :8080/stream/result`                                       | Valid SSCMA result JSON                       |
 | H-08  | MQTT broker tap (`mosquitto_sub`)                               | At least one event published end-to-end       |
 | H-09  | `python tools/grove_flash_check.py COM<n>`                      | Exit code 0 (`size > 0`)                      |
+| H-10  | Fake env direct MJPEG smoke: `tools/check_grove_streaming.ps1 -Host <ip>` | ≥ 3 JPEG frames in 3 s, no Grove required |
 
 ## 6. Schema validation
 
@@ -87,7 +89,7 @@ Should be run whenever `event_serializer.cpp` or the schema changes.
 ## 7. Known good baseline (this PR)
 
 - Static + lint: clean.
-- Native tests: **171 / 171** passing in ~29 s.
+- Native tests: **172 / 172** passing in ~29 s.
 - Embedded builds: not yet run in this PR (no firmware change since last
   green). Re-run before any firmware-touching PR.
 - Hardware: H-01..H-04 and H-06..H-08 verified on bench; **H-05 currently

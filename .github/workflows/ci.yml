@@ -57,6 +57,7 @@ jobs:
           - xiao_esp32s3_sense
           - xiao_esp32s3_sense_dev
           - xiao_esp32s3_camera_web
+          - xiao_esp32s3_camera_web_fake
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
