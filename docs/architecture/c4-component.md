@@ -84,4 +84,5 @@ Each core component has a dedicated Unity suite under `test/native/`:
   `test_config`, `test_log_helpers`, `test_json`, `test_chunker`,
   `test_runtime_enums`, `test_semver`, `test_inference_filter`.
 - Adapter sanity is exercised host-side by `test_adapters_host`.
-- 171 cases / 15 suites currently green.
+- See the `host-tests-and-coverage` job on the latest CI run for the
+  current case count (15 suites, all green).
