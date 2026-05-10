@@ -7,8 +7,12 @@
 # pyproject.toml so individual references do not need per-line markers.
 
 import os
+from collections.abc import Callable
+from typing import Any, cast
 
-Import("env")
+_scons_import = cast(Callable[..., None], globals()["Import"])
+_scons_import("env")
+env = cast(Any, globals()["env"])
 
 # Link libgcov explicitly — MinGW/Windows ld does not auto-add it from
 # -fprofile-arcs / --coverage the way Linux GCC does.

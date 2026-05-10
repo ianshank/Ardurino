@@ -42,10 +42,6 @@ wildlife::RuntimeConfig::Inference g_inference_cfg{}; // defaults are fine for s
 wildlife::SscmaI2cSource* g_source = nullptr;
 wildlife::SscmaJpegGrabber* g_grabber = nullptr;
 
-void log_kv_line(const char* line) {
-    Serial.println(line);
-}
-
 } // namespace
 
 void setup() {

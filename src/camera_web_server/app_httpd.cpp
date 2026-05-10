@@ -27,6 +27,7 @@
 #include <mbedtls/base64.h>
 #include <sdkconfig.h>
 
+#include <atomic>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -96,7 +97,7 @@ struct PtrBuffer {
 
     SemaphoreHandle_t                 mutex;
     std::deque<std::shared_ptr<Slot>> slots;
-    volatile size_t                   id    = 1;
+    std::atomic<size_t>               id{1};
     const size_t                      limit = PTR_BUFFER_SIZE;
 };
 
@@ -215,7 +216,7 @@ static void proxyCallback(const char* resp, size_t len) {
         return;
     }
 
-    p_slot->id        = PB.id;
+    p_slot->id        = PB.id.load(std::memory_order_relaxed);
     p_slot->type      = type;
     p_slot->data      = copy;
     p_slot->size      = len;
@@ -238,7 +239,7 @@ static void proxyCallback(const char* resp, size_t len) {
         free(p);
     }));
     xSemaphoreGive(PB.mutex);
-    PB.id += 1;
+    PB.id.fetch_add(1, std::memory_order_relaxed);
 
     if (discarded > 0) {
         log_i("Discarded %u old responses...", discarded);
@@ -263,7 +264,7 @@ httpd_handle_t web_httpd    = NULL;
 httpd_handle_t stream_httpd = NULL;
 
 #if defined(WILDLIFE_FAKE_JPEG)
-static volatile uint32_t s_fake_frames_injected = 0;
+static std::atomic<uint32_t> s_fake_frames_injected{0};
 
 static bool build_fake_sample_response(char** response, size_t* response_len) {
     static constexpr char kPrefix[] = "{\"type\": 1, \"name\": \"SAMPLE\", \"code\": 0, \"data\": {\"image\": \"";
@@ -318,14 +319,14 @@ static void inject_fake_sample_response() {
     }
 
     proxyCallback(response, response_len);
-    s_fake_frames_injected += 1;
+    s_fake_frames_injected.fetch_add(1, std::memory_order_relaxed);
 }
 
 static void fake_frame_pump_task(void* arg) {
     (void)arg;
-    log_i("Fake JPEG pump started (%ux%u, %u bytes)...",
-          kFakeJpegWidth,
-          kFakeJpegHeight,
+    log_i("Fake JPEG pump started (%ux%u, %zu bytes)...",
+          static_cast<unsigned>(kFakeJpegWidth),
+          static_cast<unsigned>(kFakeJpegHeight),
           kFakeJpegSize);
     while (true) {
         inject_fake_sample_response();
@@ -894,7 +895,7 @@ static esp_err_t command_handler(httpd_req_t* req) {
     char       cmd_tag_buf[32] = {0};
     size_t     cmd_tag_size    = snprintf(cmd_tag_buf, sizeof(cmd_tag_buf), CMD_TAG_FMT_STR, ticks);
 
-    size_t last_id = PB.id;
+    size_t last_id = PB.id.load(std::memory_order_relaxed);
 
     AI.write(CMD_PREFIX, strlen(CMD_PREFIX));
     AI.write(cmd_tag_buf, cmd_tag_size);
@@ -982,7 +983,7 @@ static esp_err_t status_handler(httpd_req_t* req) {
 
 #if defined(WILDLIFE_FAKE_JPEG)
     const bool     fake_enabled = true;
-    const uint32_t fake_frames  = s_fake_frames_injected;
+    const uint32_t fake_frames  = s_fake_frames_injected.load(std::memory_order_relaxed);
 #else
     const bool     fake_enabled = false;
     const uint32_t fake_frames  = 0;
@@ -1115,9 +1116,8 @@ void startCameraServer() {
     if (httpd_start(&stream_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(stream_httpd, &stream_frame_uri);
         httpd_register_uri_handler(stream_httpd, &stream_result_uri);
-    }
-
 #if defined(WILDLIFE_FAKE_JPEG)
-    start_fake_frame_pump();
+        start_fake_frame_pump();
 #endif
+    }
 }
