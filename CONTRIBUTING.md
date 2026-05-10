@@ -39,9 +39,13 @@ All of these run automatically on pull requests via `.github/workflows/ci.yml`.
 
 ## Coverage policy
 
-`gcovr` enforces ≥ 85 % line and ≥ 70 % branch coverage on
-`lib/wildlife_core/`. Adapters under `lib/wildlife_adapters/` are validated
-by the hardware regression checklist in
+`gcovr` enforces ≥ 84 % line and ≥ 67 % branch coverage on
+`lib/wildlife_core/`. The thresholds are sourced from
+`COVERAGE_LINE_THRESHOLD` / `COVERAGE_BRANCH_THRESHOLD` in
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) — update both the
+workflow and this document together so they cannot drift. Adapters under
+`lib/wildlife_adapters/` are validated by the hardware regression
+checklist in
 [docs/testing/regression-plan.md](docs/testing/regression-plan.md), not by
 line metrics.
 

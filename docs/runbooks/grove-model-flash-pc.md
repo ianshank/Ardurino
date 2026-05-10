@@ -1,5 +1,12 @@
 # Flashing a model to Grove Vision AI V2 — PC only (no mobile, no XIAO pin link)
 
+The production camera web-server stream needs a real `.tflite` on Grove. If
+you only need to smoke-test XIAO's direct MJPEG endpoint without Grove hardware,
+build `xiao_esp32s3_camera_web_fake` and run
+`tools/check_grove_streaming.ps1 -Host <device-ip>` instead. That fake target
+injects synthetic JPEG frames into `/stream/frame`; it does not emulate the
+stock browser UI Start command.
+
 Both XIAO and Grove are plugged into the PC over USB. They are NOT pin-wired
 to each other. This is the **supported** setup for the SenseCraft Web Toolkit
 and is what the Seeed wiki documents. The mobile app is not required.

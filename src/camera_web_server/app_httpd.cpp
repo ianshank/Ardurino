@@ -27,6 +27,8 @@
 #include <mbedtls/base64.h>
 #include <sdkconfig.h>
 
+#include <atomic>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <deque>
@@ -36,6 +38,10 @@
 
 #include "BYTETracker.h"
 #include "web_index.h"
+
+#if defined(WILDLIFE_FAKE_JPEG)
+    #include "fake_frame.h"
+#endif
 
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
     #include <HardwareSerial.h>
@@ -91,7 +97,7 @@ struct PtrBuffer {
 
     SemaphoreHandle_t                 mutex;
     std::deque<std::shared_ptr<Slot>> slots;
-    volatile size_t                   id    = 1;
+    std::atomic<size_t>               id{1};
     const size_t                      limit = PTR_BUFFER_SIZE;
 };
 
@@ -210,7 +216,7 @@ static void proxyCallback(const char* resp, size_t len) {
         return;
     }
 
-    p_slot->id        = PB.id;
+    p_slot->id        = PB.id.load(std::memory_order_relaxed);
     p_slot->type      = type;
     p_slot->data      = copy;
     p_slot->size      = len;
@@ -233,7 +239,7 @@ static void proxyCallback(const char* resp, size_t len) {
         free(p);
     }));
     xSemaphoreGive(PB.mutex);
-    PB.id += 1;
+    PB.id.fetch_add(1, std::memory_order_relaxed);
 
     if (discarded > 0) {
         log_i("Discarded %u old responses...", discarded);
@@ -256,6 +262,95 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 
 httpd_handle_t web_httpd    = NULL;
 httpd_handle_t stream_httpd = NULL;
+
+#if defined(WILDLIFE_FAKE_JPEG)
+static std::atomic<uint32_t> s_fake_frames_injected{0};
+
+static bool build_fake_sample_response(char** response, size_t* response_len) {
+    static constexpr char kPrefix[] = "{\"type\": 1, \"name\": \"SAMPLE\", \"code\": 0, \"data\": {\"image\": \"";
+    static constexpr char kSuffix[] = "\"}}";
+
+    const size_t b64_capacity = ((kFakeJpegSize + 2) / 3) * 4 + 1;
+    char*        b64          = (char*)malloc(b64_capacity);
+    if (b64 == NULL) {
+        log_e("Failed to allocate fake JPEG base64 buffer...");
+        return false;
+    }
+
+    size_t b64_len = 0;
+    if (mbedtls_base64_encode((unsigned char*)b64,
+                              b64_capacity,
+                              &b64_len,
+                              kFakeJpeg,
+                              kFakeJpegSize) != 0) {
+        log_e("Failed to encode fake JPEG...");
+        free(b64);
+        return false;
+    }
+    b64[b64_len] = '\0';
+
+    const size_t total_len = strlen(kPrefix) + b64_len + strlen(kSuffix);
+    char*        payload   = (char*)malloc(total_len + 1);
+    if (payload == NULL) {
+        log_e("Failed to allocate fake SAMPLE payload...");
+        free(b64);
+        return false;
+    }
+
+    const int written = snprintf(payload, total_len + 1, "%s%s%s", kPrefix, b64, kSuffix);
+    free(b64);
+    if (written < 0 || static_cast<size_t>(written) != total_len) {
+        log_e("Failed to format fake SAMPLE payload...");
+        free(payload);
+        return false;
+    }
+
+    *response     = payload;
+    *response_len = total_len;
+    return true;
+}
+
+static void inject_fake_sample_response() {
+    static char*  response     = NULL;
+    static size_t response_len = 0;
+
+    if (response == NULL && !build_fake_sample_response(&response, &response_len)) {
+        return;
+    }
+
+    proxyCallback(response, response_len);
+    s_fake_frames_injected.fetch_add(1, std::memory_order_relaxed);
+}
+
+static void fake_frame_pump_task(void* arg) {
+    (void)arg;
+    log_i("Fake JPEG pump started (%ux%u, %zu bytes)...",
+          static_cast<unsigned>(kFakeJpegWidth),
+          static_cast<unsigned>(kFakeJpegHeight),
+          kFakeJpegSize);
+    while (true) {
+        inject_fake_sample_response();
+        vTaskDelay(pdMS_TO_TICKS(250));
+    }
+}
+
+static void start_fake_frame_pump() {
+    static bool started = false;
+    if (started) {
+        return;
+    }
+    const BaseType_t result =
+        xTaskCreate(fake_frame_pump_task, "fake_jpeg_pump", 8192, NULL, 1, NULL);
+    if (result != pdPASS) {
+        log_e("Failed to start fake JPEG pump task (xTaskCreate=%d)",
+              static_cast<int>(result));
+        return;
+    }
+    started = true;
+}
+#endif
+
+static uint64_t now_ms() { return static_cast<uint64_t>(esp_timer_get_time() / 1000); }
 
 typedef struct {
     size_t size;   //number of values used for filtering
@@ -800,7 +895,7 @@ static esp_err_t command_handler(httpd_req_t* req) {
     char       cmd_tag_buf[32] = {0};
     size_t     cmd_tag_size    = snprintf(cmd_tag_buf, sizeof(cmd_tag_buf), CMD_TAG_FMT_STR, ticks);
 
-    size_t last_id = PB.id;
+    size_t last_id = PB.id.load(std::memory_order_relaxed);
 
     AI.write(CMD_PREFIX, strlen(CMD_PREFIX));
     AI.write(cmd_tag_buf, cmd_tag_size);
@@ -861,6 +956,60 @@ static esp_err_t index_handler(httpd_req_t* req) {
     return httpd_resp_send(req, (const char*)web_index_html_gz, web_index_html_gz_len);
 }
 
+static esp_err_t status_handler(httpd_req_t* req) {
+    size_t  last_frame_id = 0;
+    timeval last_frame_timestamp;
+    memset(&last_frame_timestamp, 0, sizeof(last_frame_timestamp));
+
+    xSemaphoreTake(SI.mutex, portMAX_DELAY);
+    last_frame_id        = SI.last_frame_id;
+    last_frame_timestamp = SI.last_frame_timestamp;
+    xSemaphoreGive(SI.mutex);
+
+    const uint64_t uptime = now_ms();
+    // last_frame_timestamp is encoded from xTaskGetTickCount() (see
+    // proxyCallback / initStatInfo). esp_timer_get_time() and the FreeRTOS
+    // tick clock share monotonicity but not origin, so compute age against a
+    // tick-based "now" to avoid skew.
+    const uint64_t frame_clock_now_ms =
+        static_cast<uint64_t>(xTaskGetTickCount()) * portTICK_PERIOD_MS;
+    uint64_t age = 0;
+    if (last_frame_id != 0) {
+        const uint64_t frame_ms =
+            static_cast<uint64_t>(last_frame_timestamp.tv_sec) * 1000 +
+            static_cast<uint64_t>(last_frame_timestamp.tv_usec) / 1000;
+        age = frame_clock_now_ms >= frame_ms ? frame_clock_now_ms - frame_ms : 0;
+    }
+
+#if defined(WILDLIFE_FAKE_JPEG)
+    const bool     fake_enabled = true;
+    const uint32_t fake_frames  = s_fake_frames_injected.load(std::memory_order_relaxed);
+#else
+    const bool     fake_enabled = false;
+    const uint32_t fake_frames  = 0;
+#endif
+
+    char body[256];
+    const int len = snprintf(body,
+                             sizeof(body),
+                             "{\"fake_jpeg_enabled\":%s,\"fake_frames_injected\":%u,"
+                             "\"last_frame_id\":%u,\"last_frame_age_ms\":%llu,"
+                             "\"uptime_ms\":%llu}",
+                             fake_enabled ? "true" : "false",
+                             fake_frames,
+                             static_cast<unsigned>(last_frame_id),
+                             static_cast<unsigned long long>(age),
+                             static_cast<unsigned long long>(uptime));
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    if (len < 0 || len >= static_cast<int>(sizeof(body))) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    return httpd_resp_send(req, body, len);
+}
+
 void startCameraServer() {
     httpd_config_t config   = HTTPD_DEFAULT_CONFIG();
     config.max_uri_handlers = 16;
@@ -887,6 +1036,21 @@ void startCameraServer() {
                                .is_websocket             = true,
                                .handle_ws_control_frames = false,
                                .supported_subprotocol    = NULL
+#endif
+    };
+
+    // /api/status is a plain JSON GET endpoint, not a WebSocket. Setting
+    // is_websocket=true here would make the ESP-IDF httpd reject ordinary
+    // HTTP requests with 400 if CONFIG_HTTPD_WS_SUPPORT is ever enabled.
+    httpd_uri_t status_uri = {.uri      = "/api/status",
+                              .method   = HTTP_GET,
+                              .handler  = status_handler,
+                              .user_ctx = NULL
+#ifdef CONFIG_HTTPD_WS_SUPPORT
+                              ,
+                              .is_websocket             = false,
+                              .handle_ws_control_frames = false,
+                              .supported_subprotocol    = NULL
 #endif
     };
 
@@ -932,7 +1096,17 @@ void startCameraServer() {
     if (httpd_start(&web_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(web_httpd, &index_uri);
         httpd_register_uri_handler(web_httpd, &result_uri);
+#if defined(WILDLIFE_FAKE_JPEG)
+        // Grove proxy is not initialized in fake mode (no I2C transport bound
+        // to the global SSCMA AI). command_handler unconditionally calls
+        // AI.write(), which would dereference an uninitialized transport.
+        // Skip the route entirely so the httpd returns 404 rather than UB.
+        (void)command_uri;
+        log_w("WILDLIFE_FAKE_JPEG: /command disabled (Grove proxy not initialized)");
+#else
         httpd_register_uri_handler(web_httpd, &command_uri);
+#endif
+        httpd_register_uri_handler(web_httpd, &status_uri);
     }
 
     config.server_port = 8080;
@@ -942,5 +1116,8 @@ void startCameraServer() {
     if (httpd_start(&stream_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(stream_httpd, &stream_frame_uri);
         httpd_register_uri_handler(stream_httpd, &stream_result_uri);
+#if defined(WILDLIFE_FAKE_JPEG)
+        start_fake_frame_pump();
+#endif
     }
 }

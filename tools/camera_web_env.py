@@ -19,8 +19,12 @@ with a hard-coded fallback password.
 
 import os
 import sys
+from collections.abc import Callable
+from typing import Any, cast
 
-Import("env")
+_scons_import = cast(Callable[..., None], globals()["Import"])
+_scons_import("env")
+env = cast(Any, globals()["env"])
 
 
 _STRING_DEFINES = (

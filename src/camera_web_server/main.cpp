@@ -187,6 +187,16 @@ void setup() {
     Serial.println();
     Serial.println("WSPOT camera_web_server boot");
 
+#if defined(WILDLIFE_FAKE_JPEG)
+    Serial.println("[fake-jpeg] WILDLIFE_FAKE_JPEG enabled");
+    Serial.println("[fake-jpeg] Grove hardware init is bypassed; /stream/frame");
+    Serial.println("            will emit synthetic MJPEG frames for smoke tests.");
+#else
+    Serial.println("[Grove] Real streaming requires a model-loaded Grove Vision AI V2.");
+    Serial.println("        For direct MJPEG smoke without Grove hardware, build");
+    Serial.println("        xiao_esp32s3_camera_web_fake instead.");
+#endif
+
     if (connect_station()) {
         Serial.println("WiFi connected");
         print_stream_urls(WiFi.localIP());
@@ -196,12 +206,16 @@ void setup() {
         print_stream_urls(WiFi.softAPIP());
     }
 
+#if !defined(WILDLIFE_FAKE_JPEG)
     startRemoteProxy(PROTO_I2C);
     init_grove_ai();
+#endif
     startCameraServer();
 }
 
 void loop() {
+#if !defined(WILDLIFE_FAKE_JPEG)
     loopRemoteProxy();
+#endif
     delay(5);
 }
